@@ -146,3 +146,82 @@
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
+
+/*
+ * 停靠版：作为顶栏里的一段常驻控件，不再浮在画面上。
+ * 定位、阴影、拖拽相关的东西全部作废，只保留一层淡底把按钮组圈出来。
+ *
+ * 下面带 `.control-topbar` 前缀是必要的：control-tools.css 里
+ * `.control-command-bar .remote-audio-button`、`.control-command-bar .remote-volume-slider`
+ * 这些两条类选择器在 index.css 里排在本文之后，同特异性会盖掉这里的尺寸。
+ */
+.control-command-bar--docked {
+  position: static;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  z-index: auto;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.control-topbar .control-command-bar--docked button,
+.control-topbar .control-command-bar--docked .shortcut-menu > summary {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  gap: 5px;
+}
+
+.control-topbar .control-command-bar--docked .control-mode-switch button {
+  min-height: 26px;
+  padding: 0 10px;
+}
+
+.control-topbar .control-command-bar--docked .remote-audio-control {
+  width: auto;
+  min-width: 0;
+  gap: 4px;
+}
+
+.control-topbar .control-command-bar--docked .remote-audio-button {
+  width: 32px;
+  min-width: 32px;
+  height: 30px;
+  min-height: 30px;
+}
+
+.control-topbar .control-command-bar--docked .remote-volume-slider {
+  width: 66px;
+  min-width: 66px;
+  height: 30px;
+  min-height: 30px;
+}
+
+/* 窄窗口先收起次要按钮的文字，只剩图标，避免把「断开」「会话面板」挤出顶栏。 */
+@media (max-width: 1680px) {
+  .control-topbar .control-command-bar--docked .command-action-tools button,
+  .control-topbar .control-command-bar--docked .shortcut-menu > summary {
+    font-size: 0;
+    padding: 0 8px;
+  }
+
+  .control-topbar .control-command-bar--docked .shortcut-menu-chevron {
+    display: none;
+  }
+}
+
+@media (max-width: 1280px) {
+  .control-topbar .control-command-bar--docked .remote-volume-slider {
+    display: none;
+  }
+}

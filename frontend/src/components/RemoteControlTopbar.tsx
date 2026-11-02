@@ -1,5 +1,5 @@
 import { ChevronLeft, CircleStop, LoaderCircle, PanelRight } from "lucide-react";
-import type { RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 
 import type { UuDevice } from "@uurc/shared/devices";
 
@@ -40,6 +40,7 @@ export function RemoteControlTopbar({
   chromeHidden = false,
   chromeHoverBindings,
   topbarRef,
+  commandBar,
 }: RemoteControlTopbarProps & {
   screenPicker: RemoteVideoSourcePanelProps;
   panelOpen: boolean;
@@ -49,6 +50,8 @@ export function RemoteControlTopbar({
   chromeHidden?: boolean;
   chromeHoverBindings?: FullscreenChromeHoverBindings;
   topbarRef?: RefObject<HTMLElement | null>;
+  /** 连接控制栏，停靠在标题与右侧按钮之间的空白区。 */
+  commandBar?: ReactNode;
 }) {
   const stage = browserRemoteState.stage;
   const negotiating = stage === "controlled" || stage === "offered";
@@ -84,6 +87,7 @@ export function RemoteControlTopbar({
         />
       ) : null}
       <span className="control-topbar-spacer" />
+      {commandBar}
       <RemoteScreenPicker {...screenPicker} />
       <button
         type="button"

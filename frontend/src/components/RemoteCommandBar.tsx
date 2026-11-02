@@ -31,6 +31,11 @@ export interface RemoteCommandBarChromeProps {
   onChromeHoldingChange: (holding: boolean) => void;
   /** 供页面判断"鼠标是否回到工具栏附近"，用于全屏唤出。 */
   chromeAnchorRef: RefObject<HTMLElement | null>;
+  /**
+   * 停靠模式：作为顶栏里的一段控件常驻显示，不再浮动、不可拖动。
+   * 关闭时保持原本的「画面底部居中 + 可拖动」形态。
+   */
+  docked?: boolean;
 }
 
 export function RemoteCommandBar({
@@ -51,9 +56,11 @@ export function RemoteCommandBar({
   chromeHoverBindings,
   onChromeHoldingChange,
   chromeAnchorRef,
+  docked = false,
 }: RemoteCommandBarProps & RemoteCommandBarChromeProps) {
   const nextStageMode = remoteStageViewMode === "fit" ? "fill" : "fit";
-  const { dragHandleProps, isDragging, panelRef, panelStyle } = useDraggableFloatingPanel<HTMLElement>();
+  // 停靠时禁用拖拽：hooks 保持无条件调用，仅把 enabled 关掉。
+  const { dragHandleProps, isDragging, panelRef, panelStyle } = useDraggableFloatingPanel<HTMLElement>(!docked);
   const connected = controlChannelState === "open";
   const idleHidden = chromeHidden;
 
@@ -68,15 +75,23 @@ export function RemoteCommandBar({
         panelRef.current = node;
         chromeAnchorRef.current = node;
       }}
-      className={`control-command-bar${idleHidden ? " control-command-bar--idle-hidden" : ""}`}
+      className={[
+        "control-command-bar",
+        docked ? "control-command-bar--docked" : "",
+        idleHidden ? "control-command-bar--idle-hidden" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       style={panelStyle}
       aria-label="远控主流程"
       aria-hidden={idleHidden}
       {...chromeHoverBindings}
     >
-      <button className="command-drag-handle" type="button" aria-label="拖动工具栏" {...dragHandleProps}>
-        <GripHorizontal size={17} />
-      </button>
+      {docked ? null : (
+        <button className="command-drag-handle" type="button" aria-label="拖动工具栏" {...dragHandleProps}>
+          <GripHorizontal size={17} />
+        </button>
+      )}
       <div className="command-action-group command-action-primary">
         {connected ? (
           <div className="control-mode-switch" role="group" aria-label="控制模式">
@@ -104,20 +119,29 @@ export function RemoteCommandBar({
             </button>
           </div>
         ) : (
-          <button className="primary-action-button" onClick={onNextAction} disabled={nextAction.disabled}>
+          <button
+            className="primary-action-button"
+            onClick={onNextAction}
+            disabled={nextAction.disabled}
+            title={docked ? nextAction.detail || undefined : undefined}
+          >
             {busy ? <LoaderCircle className="spin" size={17} /> : <PlugZap size={17} />}
             {nextAction.label}
           </button>
         )}
       </div>
-      {!connected && nextAction.detail ? <p className="operation-note">{nextAction.detail}</p> : null}
+      {/* 停靠时顶栏只有一行，放不下说明文字，改挂到主按钮的 title 上。 */}
+      {!docked && !connected && nextAction.detail ? <p className="operation-note">{nextAction.detail}</p> : null}
       <div className="command-action-group command-action-tools" aria-label="远控工具栏">
         <RemoteAudioControl {...remoteAudio} />
-        <button onClick={() => onStageViewModeChange(nextStageMode)}>
+        <button
+          onClick={() => onStageViewModeChange(nextStageMode)}
+          aria-label={remoteStageViewMode === "fit" ? "填充画面" : "适应画面"}
+        >
           <Scan size={17} />
           {remoteStageViewMode === "fit" ? "填充画面" : "适应画面"}
         </button>
-        <button onClick={onToggleFullscreen}>
+        <button onClick={onToggleFullscreen} aria-label={isFullscreen ? "退出全屏" : "全屏"}>
           <Maximize2 size={17} />
           {isFullscreen ? "退出全屏" : "全屏"}
         </button>

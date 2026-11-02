@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -25,7 +25,7 @@ import {
   setupAppTest,
   writeLocalClipboardTextMock,
 } from "./appTestEnvironment.js";
-import { metricValue, rectFrom } from "./appTestValues.js";
+import { metricValue } from "./appTestValues.js";
 
 describe("App remote experience", () => {
   beforeEach(setupAppTest);
@@ -279,7 +279,7 @@ describe("App remote experience", () => {
     expect(metricValue(quality.metrics, "文本通道")).toBe("已打开");
   });
 
-  it("docks and drags the toolbar in the regular stage, with fullscreen, view mode, and shortcuts", async () => {
+  it("pins the toolbar into the control topbar, with fullscreen, view mode, and shortcuts", async () => {
     vi.stubGlobal("RTCPeerConnection", TestPeerConnection);
     appBackend.currentParticipants = [];
     const user = userEvent.setup();
@@ -296,29 +296,12 @@ describe("App remote experience", () => {
     const stageFrame = stage.parentElement as HTMLDivElement;
     const toolbar = screen.getByLabelText("远控主流程");
 
-    // 普通远控画布保持默认停靠位置，同时提供拖动把手。
-    const dragHandle = screen.getByRole("button", { name: "拖动工具栏" });
+    // 工具栏常驻在顶栏里，不再浮在画面上，也不再提供拖动把手。
+    expect(toolbar.closest(".control-topbar")).not.toBeNull();
+    expect(toolbar).toHaveClass("control-command-bar--docked");
+    expect(screen.queryByRole("button", { name: "拖动工具栏" })).not.toBeInTheDocument();
     expect(toolbar.style.position).toBe("");
     expect(stageFrame).not.toHaveClass("control-stage-frame--fullscreen");
-
-    vi.spyOn(toolbar.parentElement as HTMLElement, "getBoundingClientRect").mockReturnValue(
-      rectFrom({ left: 0, top: 0, width: 900, height: 500 }),
-    );
-    vi.spyOn(toolbar, "getBoundingClientRect").mockReturnValue(
-      rectFrom({ left: 300, top: 20, width: 420, height: 52 }),
-    );
-    fireEvent.pointerDown(dragHandle, { pointerId: 1, clientX: 320, clientY: 40 });
-    fireEvent.pointerMove(dragHandle, { pointerId: 1, clientX: 430, clientY: 110 });
-    fireEvent.pointerUp(dragHandle, { pointerId: 1, clientX: 430, clientY: 110 });
-    await waitFor(() => {
-      expect(toolbar).toHaveStyle({
-        position: "fixed",
-        bottom: "auto",
-        left: "410px",
-        top: "90px",
-        transform: "none",
-      });
-    });
 
     expect(stage).toHaveClass("remote-stage-fit");
     await user.click(screen.getByRole("button", { name: "填充画面" }));
@@ -326,11 +309,11 @@ describe("App remote experience", () => {
     await user.click(screen.getByRole("button", { name: "适应画面" }));
     expect(stage).toHaveClass("remote-stage-fit");
 
-    // 全屏继续沿用同一把手与拖动位置。
+    // 全屏只改变画面布局，工具栏仍留在顶部浮层里。
     await user.click(screen.getByRole("button", { name: "全屏" }));
     expect(stageFrame).toHaveClass("control-stage-frame--fullscreen");
     expect(screen.getByRole("button", { name: "退出全屏" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "拖动工具栏" })).toBeInTheDocument();
+    expect(toolbar.closest(".control-topbar")).not.toBeNull();
 
     const sentBefore = TestPeerConnection.sentByLabel.CONTROL_DATA_CHANNEL?.length ?? 0;
     await user.click(screen.getByText("快捷键"));

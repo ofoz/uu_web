@@ -123,6 +123,17 @@ export function RemoteControlPage(props: RemoteControlPageProps) {
         chromeHidden={chrome.hidden}
         chromeHoverBindings={chrome.hoverBindings}
         topbarRef={topbarRef}
+        commandBar={
+          <RemoteCommandBar
+            {...props.commandBar}
+            onNextAction={handlePrimaryAction}
+            chromeHidden={chrome.hidden}
+            chromeHoverBindings={chrome.hoverBindings}
+            onChromeHoldingChange={chrome.setHolding}
+            chromeAnchorRef={chromeAnchorRef}
+            docked
+          />
+        }
       />
 
       {shell.error ? (
@@ -141,17 +152,9 @@ export function RemoteControlPage(props: RemoteControlPageProps) {
         >
           <RemoteControlStage {...props.stage} chromeHidden={chrome.hidden} />
           <RemoteReconnectBanner {...props.reconnect} />
-          <RemoteCommandBar
-            {...props.commandBar}
-            onNextAction={handlePrimaryAction}
-            chromeHidden={chrome.hidden}
-            chromeHoverBindings={chrome.hoverBindings}
-            onChromeHoldingChange={chrome.setHolding}
-            chromeAnchorRef={chromeAnchorRef}
-          />
           {shell.isFullscreen ? (
             <div className={`fullscreen-hint${chrome.hidden ? " fullscreen-hint--idle-hidden" : ""}`}>
-              鼠标移到屏幕顶部可唤出工具栏
+              鼠标移到屏幕顶部可唤出顶栏与工具栏
             </div>
           ) : null}
         </div>
