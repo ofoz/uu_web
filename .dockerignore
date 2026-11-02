@@ -1,0 +1,14 @@
+.git
+.github
+node_modules
+**/node_modules
+**/dist
+artifacts
+.wrangler
+.secrets
+.env
+.env.*
+state.json
+*.state.json
+*.log
+.DS_Store

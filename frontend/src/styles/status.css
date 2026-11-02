@@ -1,0 +1,170 @@
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.status-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+
+.status-pill-ready {
+  color: var(--success);
+}
+
+.status-pill-warn {
+  color: var(--warn);
+}
+
+.status-pill-idle {
+  color: var(--text-muted);
+}
+
+.status-pill-connecting {
+  color: var(--warn);
+}
+
+.status-pill-danger {
+  color: var(--danger);
+}
+
+.status-pill-ready,
+.status-pill-warn,
+.status-pill-idle,
+.status-pill-connecting,
+.status-pill-danger {
+  border-color: var(--border);
+}
+
+.status-pill-ready > :last-child,
+.status-pill-warn > :last-child,
+.status-pill-idle > :last-child,
+.status-pill-connecting > :last-child,
+.status-pill-danger > :last-child {
+  color: var(--text);
+}
+
+/* 会话页顶栏用：深色底、半透明描边，取代浅色主题的白底描边。 */
+.status-pill-dark {
+  border-color: var(--dark-border);
+  background: var(--dark-surface-2);
+}
+
+.status-pill-dark.status-pill-idle {
+  color: var(--dark-text-muted);
+  background: var(--dark-idle-bg);
+}
+
+.status-pill-dark.status-pill-ready {
+  color: var(--dark-success);
+  background: var(--dark-success-bg);
+}
+
+.status-pill-dark.status-pill-connecting,
+.status-pill-dark.status-pill-warn {
+  color: var(--dark-warn);
+  background: var(--dark-warn-bg);
+}
+
+.status-pill-dark.status-pill-danger {
+  color: var(--dark-danger);
+}
+
+.status-pill-dark.status-pill-ready > :last-child,
+.status-pill-dark.status-pill-warn > :last-child,
+.status-pill-dark.status-pill-idle > :last-child,
+.status-pill-dark.status-pill-connecting > :last-child,
+.status-pill-dark.status-pill-danger > :last-child {
+  color: currentColor;
+}
+
+.error-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--danger-soft);
+  border: 1px solid #fecaca;
+  color: var(--danger);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  margin-bottom: 18px;
+  font-size: 13px;
+}
+
+.error-strip span {
+  color: var(--text);
+}
+
+.control-shell .error-strip {
+  margin: 0 12px 8px;
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: var(--dark-danger);
+}
+
+.control-shell .error-strip span {
+  color: var(--dark-text);
+}
+
+.operation-note {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: var(--success);
+  background: var(--success-soft);
+  border: 1px solid #bbf7d0;
+  font-size: 12px;
+}
+
+.warning-note {
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-color: #fde68a;
+}
+
+/* 会话页顶部的占用/异常提示条：始终出现在深色会话外壳内，用半透明深色底色而非浅色底色。 */
+.occupancy-callout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 12px 8px;
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  color: var(--dark-warn);
+  background: var(--dark-warn-bg);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  font-size: 12.5px;
+}
+
+.occupancy-callout svg {
+  flex: 0 0 auto;
+}
+
+.occupancy-callout.takeover {
+  color: var(--dark-danger);
+  background: rgba(248, 113, 113, 0.14);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.occupancy-callout.info {
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.14);
+  border-color: rgba(96, 165, 250, 0.3);
+}

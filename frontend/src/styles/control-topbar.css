@@ -1,0 +1,127 @@
+/* 顶栏图标按钮（返回、会话面板开关）：深色描边。 */
+.icon-button-dark {
+  border-color: var(--dark-border);
+  background: transparent;
+}
+
+.icon-button-dark svg {
+  color: var(--dark-text-muted);
+}
+
+.icon-button-dark:hover:not(:disabled) {
+  background: var(--dark-surface-2);
+  border-color: var(--dark-border);
+}
+
+.icon-button-dark.is-active {
+  background: var(--dark-surface-2);
+}
+
+.icon-button-dark.is-active svg {
+  color: var(--dark-text);
+}
+
+.control-topbar-cancel {
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid var(--dark-border);
+  background: transparent;
+  color: var(--dark-text-muted);
+  font-size: 12.5px;
+}
+
+.control-topbar-cancel:hover:not(:disabled) {
+  background: var(--dark-surface-2);
+  border-color: var(--dark-border);
+  color: var(--dark-text);
+}
+
+.control-topbar-disconnect {
+  min-height: 30px;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  color: var(--dark-danger);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.control-topbar-disconnect:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.12);
+}
+
+/* 顶栏画面源下拉：紧凑触发按钮 + 悬浮弹层，复用 video-source-list 的按钮视觉。 */
+.screen-picker {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.screen-picker > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--dark-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.screen-picker > summary::-webkit-details-marker {
+  display: none;
+}
+
+.screen-picker-chevron {
+  color: var(--dark-text-dim);
+  transition: transform 0.14s ease;
+}
+
+.screen-picker[open] .screen-picker-chevron {
+  transform: rotate(180deg);
+}
+
+.screen-picker-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius);
+  background: rgba(24, 24, 27, 0.98);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.screen-picker-panel button {
+  min-width: 84px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid var(--dark-border);
+  background: transparent;
+  color: var(--dark-text-muted);
+}
+
+.screen-picker-panel button.is-active {
+  border-color: var(--accent);
+  background: rgba(37, 99, 235, 0.14);
+  color: #ffffff;
+}
+
+.screen-picker-panel button small {
+  color: inherit;
+  opacity: 0.7;
+  font-size: 10.5px;
+}

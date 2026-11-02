@@ -1,0 +1,247 @@
+.empty-text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* 设备列表：不再按类型分区块，改为在线/离线两组平铺，类型只作为行内说明文字。 */
+.device-group-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  color: var(--gray-400);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.device-group-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--border-soft);
+}
+
+.device-rows-frame {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.device-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.device-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 13.5px;
+}
+
+.device-row:last-child {
+  border-bottom: none;
+}
+
+.device-row-online:first-child {
+  background: var(--bg);
+}
+
+.device-row-offline {
+  min-height: 52px;
+  color: var(--gray-500);
+  opacity: 0.72;
+}
+
+.device-row-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+}
+
+.device-row-dot.is-online {
+  background: var(--success);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.14);
+}
+
+.device-row-dot.is-offline {
+  background: var(--border-strong);
+}
+
+.device-row-icon {
+  flex: 0 0 auto;
+  color: var(--gray-450);
+}
+
+.device-row-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.device-row-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.device-row-online .device-row-name {
+  font-size: 14px;
+}
+
+.device-row-badge {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 1px 7px;
+  color: var(--gray-450);
+  font-size: 11px;
+}
+
+.device-row-meta {
+  flex: 0 0 auto;
+  color: var(--gray-400);
+  font-size: 12px;
+  font-family: "SF Mono", Menlo, monospace;
+}
+
+.device-row-connect {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.device-offline-section {
+  margin-top: 4px;
+}
+
+.device-offline-section > summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.device-offline-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.device-group-collapse-hint::after {
+  content: "展开";
+  color: var(--gray-350);
+  font-size: 11.5px;
+  font-weight: 400;
+}
+
+.device-offline-section[data-expanded="true"] .device-group-collapse-hint::after {
+  content: "收起";
+}
+
+.device-empty-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--gray-300);
+  font-size: 12px;
+}
+
+.input-guard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.input-guard strong,
+.input-guard span {
+  display: block;
+  min-width: 0;
+}
+
+.input-guard strong {
+  margin-bottom: 2px;
+  font-size: 13px;
+}
+
+.input-guard span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.input-guard-active {
+  border-color: var(--accent-soft-border);
+  background: var(--accent-soft);
+}
+
+.input-guard-active strong {
+  color: var(--accent);
+}
+
+.participant-empty,
+.participant-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+}
+
+.participant-empty {
+  color: var(--text-muted);
+  background: var(--surface-2);
+}
+
+.participant-list {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.participant-card {
+  align-items: flex-start;
+  background: var(--surface);
+}
+
+.participant-card svg {
+  color: var(--text-muted);
+}
+
+.participant-card strong,
+.participant-card span {
+  display: block;
+  min-width: 0;
+}
+
+.participant-card strong {
+  margin-bottom: 2px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.participant-card span {
+  color: var(--text-muted);
+  font-size: 12px;
+}

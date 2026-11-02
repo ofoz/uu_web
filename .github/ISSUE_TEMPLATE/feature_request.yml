@@ -1,0 +1,48 @@
+name: Feature request / 功能建议
+description: Suggest a focused improvement to UU Remote Web. / 提出明确的改进建议。
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the user problem first. Keep credentials, tokens, SMS codes, device IDs, and private session details out of the issue.
+
+        请先说明实际使用问题。Issue 中不要包含账号凭证、Token、短信验证码、设备 ID 或私有会话信息。
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / 使用问题
+      description: What workflow is blocked, unreliable, or awkward today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal / 建议方案
+      description: Describe the behavior you expect and where it should appear.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area / 涉及范围
+      options:
+        - Remote control session
+        - Login and account credentials
+        - Device list and remote assistance
+        - Docker deployment
+        - Cloudflare deployment
+        - Documentation and contributor experience
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered / 已考虑的替代方案
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context / 补充信息

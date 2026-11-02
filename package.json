@@ -1,0 +1,40 @@
+{
+  "name": "uurc-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run build -w shared && concurrently -n shared,backend,frontend -c blue,green,magenta \"npm run dev -w shared\" \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "build:cloudflare": "npm run build -w shared && npm run build -w frontend",
+    "dev:cloudflare": "wrangler dev",
+    "deploy:cloudflare": "wrangler deploy",
+    "check:cloudflare": "WRANGLER_LOG_PATH=.wrangler/logs/check.log wrangler deploy --dry-run --outdir .wrangler/dry-run",
+    "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run test -w shared && npm run test -w backend && npm run test -w frontend && npm run test:cloudflare",
+    "test:unit": "npm run test -w shared && npm run test -w backend && npm run test -w frontend && npm run test:cloudflare",
+    "test:cloudflare": "vitest run --config cloudflare/vitest.config.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "concurrently": "^9.1.2",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.1",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.62.0",
+    "vitest": "^4.0.18",
+    "wrangler": "^4.112.0"
+  }
+}

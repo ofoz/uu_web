@@ -1,0 +1,405 @@
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  min-width: 0;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  margin-bottom: 16px;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text);
+}
+
+.panel-title h2 {
+  min-width: 0;
+  font-size: 15.5px;
+}
+
+.panel-title svg {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+}
+
+.panel-title .status-pill {
+  min-height: 28px;
+  margin-left: 4px;
+  padding: 0 10px 0 8px;
+  font-size: 12px;
+}
+
+.panel-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.status-list {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 12px;
+  background: var(--surface);
+}
+
+.status-list.compact {
+  font-size: 12.5px;
+}
+
+.status-row {
+  min-height: 32px;
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.status-row:last-child {
+  border-bottom: 0;
+}
+
+.status-row span,
+.status-row code {
+  padding: 7px 10px;
+  min-width: 0;
+}
+
+.status-row span {
+  color: var(--text-muted);
+  background: var(--surface-2);
+  font-size: 12px;
+}
+
+.status-row code {
+  color: var(--text);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.identity-summary {
+  display: grid;
+  gap: 0;
+  margin-bottom: 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.identity-summary div {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  border-bottom: 1px solid var(--border-soft);
+  padding: 10px 12px;
+}
+
+.identity-summary div:last-child {
+  border-bottom: 0;
+}
+
+.identity-summary span {
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.identity-summary strong {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identity-section {
+  border-top: 1px solid var(--border-soft);
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.auth-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 24px;
+  margin: 0;
+}
+
+.auth-card h1 {
+  margin-bottom: 4px;
+  font-size: 17px;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.auth-card-desc {
+  margin: 0 0 20px;
+  color: var(--gray-400);
+  font-size: 12.5px;
+}
+
+.section-help {
+  margin: -4px 0 4px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.account-actions-spacer {
+  flex: 1;
+  min-width: 8px;
+}
+
+.form-section {
+  display: grid;
+  gap: 12px;
+}
+
+.form-section label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.form-section label span {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.inline-fields {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.field-label {
+  display: block;
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.wide-button {
+  width: 100%;
+}
+
+.field-hint,
+.login-import-hint {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.login-import-hint {
+  margin: 0 0 10px;
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.link-button:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+/* Tabs 浅色 segmented 变体（登录卡片：短信登录/导入凭证），视觉上与 .segmented-control 一致。 */
+.tabs-list.tabs-list-segmented {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  padding: 2px;
+  margin-bottom: 18px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.login-import-panel textarea {
+  min-height: 96px;
+  margin-top: 0;
+}
+
+.login-import-panel .field-hint {
+  margin-top: 2px;
+  text-align: center;
+}
+
+.tabs-list-segmented button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 30px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--gray-450);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.tabs-list-segmented button.is-active {
+  color: var(--text);
+}
+
+.tabs-list-segmented .tabs-active-indicator {
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Dialog（ui/Dialog）：占用设备加入方式确认等阻断式弹层。 */
+.dialog-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 10, 10, 0.42);
+  backdrop-filter: blur(5px);
+  padding: 24px;
+}
+
+.dialog-scrim[data-motion-state="exiting"] {
+  pointer-events: none;
+}
+
+.dialog-card {
+  width: 100%;
+  max-width: 440px;
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--border) 88%, white);
+  background: var(--surface);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+  padding: 24px;
+  will-change: transform, opacity;
+}
+
+.occupied-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.occupied-dialog-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-xl);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.occupied-dialog-title {
+  margin-bottom: 3px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.occupied-dialog-desc {
+  margin: 0;
+  color: var(--gray-450);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.occupied-dialog-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 4px 0 12px;
+}
+
+.occupied-dialog-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-height: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-xl);
+  text-align: left;
+}
+
+.occupied-dialog-option span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.occupied-dialog-option small {
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.occupied-dialog-option-normal {
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+}
+
+.occupied-dialog-option-normal span {
+  color: var(--accent-hover);
+}
+
+.occupied-dialog-option-normal small {
+  color: #3b82f6;
+}
+
+.occupied-dialog-option-takeover {
+  border: 1px solid var(--border-soft);
+  background: var(--surface);
+}
+
+.occupied-dialog-option-takeover span {
+  color: var(--danger);
+}
+
+.occupied-dialog-option-takeover small {
+  color: var(--gray-400);
+}
+
+.occupied-dialog-cancel {
+  text-align: center;
+}
+
+.occupied-dialog-cancel button {
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--gray-400);
+  font-size: 12.5px;
+}

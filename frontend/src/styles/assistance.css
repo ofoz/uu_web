@@ -1,0 +1,71 @@
+/* 远控伙伴页表单。 */
+.assistance-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.assistance-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-xl);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.assistance-header h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.assistance-header p {
+  margin: 0;
+  color: var(--gray-400);
+  font-size: 12.5px;
+}
+
+.assistance-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.assistance-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.assistance-form label > span:first-child {
+  color: var(--gray-600);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.assistance-optional {
+  color: var(--gray-350);
+  font-weight: 400;
+}
+
+.assistance-hint {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--gray-450);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.assistance-hint svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--gray-350);
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "uurc-web",
+  "main": "cloudflare/src/index.ts",
+  "compatibility_date": "2026-05-17",
+  "assets": {
+    "directory": "./frontend/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": [
+      "/api/*",
+      "/login",
+      "/login/",
+      "/devices",
+      "/devices/*",
+      "/partner",
+      "/partner/",
+      "/account",
+      "/account/",
+    ],
+  },
+  "build": {
+    "command": "npm run build:cloudflare",
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "REMOTE_SIGNAL_SESSION",
+        "class_name": "RemoteSignalSession",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RemoteSignalSession"],
+    },
+  ],
+  "observability": {
+    "enabled": true,
+  },
+}

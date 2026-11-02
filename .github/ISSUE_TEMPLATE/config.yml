@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report / 安全问题
+    url: mailto:iola1999@foxmail.com
+    about: Report vulnerabilities and credential-exposure risks privately. / 请私下报告漏洞和凭证泄露风险。
+  - name: Cloudflare deployment guide / Cloudflare 部署指南
+    url: https://github.com/iola1999/uurc-web/blob/main/cloudflare/README.md
+    about: Review deployment requirements, connection routing, and security guidance. / 查看部署要求、连接路径和安全说明。

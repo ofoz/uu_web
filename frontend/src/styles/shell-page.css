@@ -1,0 +1,55 @@
+/* 远控伙伴 / 账号与凭证：AppShell 内的通用页面外壳（顶栏 + 居中内容列）。 */
+.shell-page-topbar {
+  height: 56px;
+  min-height: 56px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.shell-page-topbar h1 {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-page-body {
+  flex: 1;
+  padding: 24px 28px;
+  overflow-y: auto;
+}
+
+.shell-page-body-narrow {
+  max-width: 520px;
+}
+
+.shell-page-body-medium {
+  max-width: 660px;
+}
+
+.shell-page-body-wide {
+  max-width: 920px;
+}
+
+/* 通用方形图标按钮：设备列表刷新等紧凑操作。 */
+.icon-button {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.icon-button svg {
+  color: var(--gray-600);
+}

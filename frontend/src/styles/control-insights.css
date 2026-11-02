@@ -1,0 +1,272 @@
+.control-insights {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.9fr) minmax(240px, 0.8fr);
+  gap: 12px;
+}
+
+.control-insight-panel {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 14px;
+}
+
+.control-insight-panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.control-insight-panel header div {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-insight-panel h2 {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.control-insight-panel header svg {
+  color: var(--text-muted);
+}
+
+.control-insight-panel header span,
+.control-insight-panel small {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.control-insight-panel header span {
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.control-insight-panel p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.clipboard-direction-status {
+  display: grid;
+  gap: 6px;
+}
+
+.clipboard-direction-status p {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+}
+
+.clipboard-direction-status strong {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.clipboard-direction-status span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.clipboard-fallback {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.clipboard-fallback > span {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.clipboard-fallback textarea {
+  min-height: 72px;
+  max-height: 140px;
+  margin: 0;
+  padding: 8px 10px;
+  resize: vertical;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.quality-good {
+  border-color: #bbf7d0;
+}
+
+.quality-good header > span {
+  color: var(--success);
+}
+
+.quality-warn {
+  border-color: #fde68a;
+}
+
+.quality-warn header > span {
+  color: var(--warn);
+}
+
+.quality-bad {
+  border-color: #fecaca;
+}
+
+.quality-bad header > span {
+  color: var(--danger);
+}
+
+.quality-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 6px;
+}
+
+.quality-metric,
+.video-source-list > span {
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  padding: 7px 8px;
+  overflow: hidden;
+}
+
+.quality-metric {
+  display: grid;
+  gap: 2px;
+  min-height: 64px;
+}
+
+.quality-metric small {
+  overflow: hidden;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.quality-metric strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.video-source-list > span {
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.panel-action-row,
+.video-source-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.panel-action-row button,
+.video-source-list button {
+  min-height: 34px;
+}
+
+.video-source-list button {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
+  min-height: 44px;
+  padding: 5px 10px;
+}
+
+.video-source-list button small {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.video-source-list button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.video-source-list button[aria-pressed="true"] small {
+  color: var(--accent);
+}
+
+.video-source-list button.video-source-empty small {
+  color: var(--warn);
+}
+
+/* 连接质量“更多指标”：默认收起的诊断信息，减少常驻信息密度。 */
+.quality-more > summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.quality-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.quality-more[open] > summary {
+  margin-bottom: 8px;
+}
+
+/* 控制设置里的“高级设置（调试用）”内层折叠，与用户设置区分层。 */
+.control-subdrawer {
+  margin: 4px 0 0;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 12px;
+}
+
+.control-subdrawer > summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.control-subdrawer > summary::-webkit-details-marker {
+  display: none;
+}
+
+.control-subdrawer > summary::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 6px;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: rotate(45deg);
+  vertical-align: middle;
+}
+
+.control-subdrawer[data-expanded="true"] > summary::after {
+  transform: rotate(225deg);
+}

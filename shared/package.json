@@ -1,0 +1,151 @@
+{
+  "name": "@uurc/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./authState": {
+      "types": "./dist/authState.d.ts",
+      "default": "./dist/authState.js"
+    },
+    "./constants": {
+      "types": "./dist/constants.d.ts",
+      "default": "./dist/constants.js"
+    },
+    "./devices": {
+      "types": "./dist/devices.d.ts",
+      "default": "./dist/devices.js"
+    },
+    "./frontendRoutes": {
+      "types": "./dist/frontendRoutes.d.ts",
+      "default": "./dist/frontendRoutes.js"
+    },
+    "./loginFlow": {
+      "types": "./dist/loginFlow.d.ts",
+      "default": "./dist/loginFlow.js"
+    },
+    "./redact": {
+      "types": "./dist/redact.d.ts",
+      "default": "./dist/redact.js"
+    },
+    "./remoteBootstrap": {
+      "types": "./dist/remoteBootstrap.d.ts",
+      "default": "./dist/remoteBootstrap.js"
+    },
+    "./remoteSession": {
+      "types": "./dist/remoteSession.d.ts",
+      "default": "./dist/remoteSession.js"
+    },
+    "./roomConfig": {
+      "types": "./dist/roomConfig.d.ts",
+      "default": "./dist/roomConfig.js"
+    },
+    "./roomSession": {
+      "types": "./dist/roomSession.d.ts",
+      "default": "./dist/roomSession.js"
+    },
+    "./runtimeProfile": {
+      "types": "./dist/runtimeProfile.d.ts",
+      "default": "./dist/runtimeProfile.js"
+    },
+    "./uuProxy": {
+      "types": "./dist/uuProxy.d.ts",
+      "default": "./dist/uuProxy.js"
+    },
+    "./uuTransport": {
+      "types": "./dist/uuTransport.d.ts",
+      "default": "./dist/uuTransport.js"
+    },
+    "./signalGateway/events": {
+      "types": "./dist/signalGateway/events.d.ts",
+      "default": "./dist/signalGateway/events.js"
+    },
+    "./signalGateway/model": {
+      "types": "./dist/signalGateway/model.d.ts",
+      "default": "./dist/signalGateway/model.js"
+    },
+    "./signalGateway/payload": {
+      "types": "./dist/signalGateway/payload.d.ts",
+      "default": "./dist/signalGateway/payload.js"
+    },
+    "./signalGateway/requests": {
+      "types": "./dist/signalGateway/requests.d.ts",
+      "default": "./dist/signalGateway/requests.js"
+    },
+    "./signalGateway/status": {
+      "types": "./dist/signalGateway/status.d.ts",
+      "default": "./dist/signalGateway/status.js"
+    },
+    "./streamer/clipboardProtocol": {
+      "types": "./dist/streamer/clipboardProtocol.d.ts",
+      "default": "./dist/streamer/clipboardProtocol.js"
+    },
+    "./streamer/clipboardV3": {
+      "types": "./dist/streamer/clipboardV3.d.ts",
+      "default": "./dist/streamer/clipboardV3.js"
+    },
+    "./streamer/clipboardV4": {
+      "types": "./dist/streamer/clipboardV4.d.ts",
+      "default": "./dist/streamer/clipboardV4.js"
+    },
+    "./streamer/connectOptions": {
+      "types": "./dist/streamer/connectOptions.d.ts",
+      "default": "./dist/streamer/connectOptions.js"
+    },
+    "./streamer/connectOptionsModel": {
+      "types": "./dist/streamer/connectOptionsModel.d.ts",
+      "default": "./dist/streamer/connectOptionsModel.js"
+    },
+    "./streamer/controlChannelDecode": {
+      "types": "./dist/streamer/controlChannelDecode.d.ts",
+      "default": "./dist/streamer/controlChannelDecode.js"
+    },
+    "./streamer/controlChannelEncode": {
+      "types": "./dist/streamer/controlChannelEncode.d.ts",
+      "default": "./dist/streamer/controlChannelEncode.js"
+    },
+    "./streamer/controlChannelProtocol": {
+      "types": "./dist/streamer/controlChannelProtocol.d.ts",
+      "default": "./dist/streamer/controlChannelProtocol.js"
+    },
+    "./streamer/controlConfig": {
+      "types": "./dist/streamer/controlConfig.d.ts",
+      "default": "./dist/streamer/controlConfig.js"
+    },
+    "./streamer/inputDesktop": {
+      "types": "./dist/streamer/inputDesktop.d.ts",
+      "default": "./dist/streamer/inputDesktop.js"
+    },
+    "./streamer/readiness": {
+      "types": "./dist/streamer/readiness.d.ts",
+      "default": "./dist/streamer/readiness.js"
+    },
+    "./streamer/signalControl": {
+      "types": "./dist/streamer/signalControl.d.ts",
+      "default": "./dist/streamer/signalControl.js"
+    },
+    "./streamer/signalSession": {
+      "types": "./dist/streamer/signalSession.d.ts",
+      "default": "./dist/streamer/signalSession.js"
+    },
+    "./streamer/signalSoac": {
+      "types": "./dist/streamer/signalSoac.d.ts",
+      "default": "./dist/streamer/signalSoac.js"
+    },
+    "./streamer/transport": {
+      "types": "./dist/streamer/transport.d.ts",
+      "default": "./dist/streamer/transport.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch --preserveWatchOutput",
+    "test": "vitest run"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "typescript": "^5.7.3",
+    "vitest": "^4.0.18"
+  }
+}

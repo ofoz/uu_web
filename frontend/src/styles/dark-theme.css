@@ -1,0 +1,25 @@
+/* 会话页深色令牌：仅作用于 .control-shell 子树，非全局主题切换。
+   数值取自重设计稿（redesign-options.dc.html），并把 stage.css/controls.css 里
+   已经存在的深色 rgba 字面量收敛成同一套变量，避免两套写法并存。 */
+.control-shell {
+  --dark-bg: #0b0b0c;
+  --dark-bg-pure: #000000;
+  --dark-panel: #131316;
+  --dark-border: rgba(255, 255, 255, 0.08);
+  --dark-surface-1: rgba(255, 255, 255, 0.03);
+  --dark-surface-2: rgba(255, 255, 255, 0.07);
+  --dark-text: rgba(255, 255, 255, 0.92);
+  --dark-text-muted: rgba(255, 255, 255, 0.55);
+  --dark-text-dim: rgba(255, 255, 255, 0.35);
+  --dark-toolbar-bg: rgba(24, 24, 27, 0.94);
+  --dark-scrim: rgba(10, 10, 10, 0.4);
+  --dark-success: #4ade80;
+  --dark-success-dot: #22c55e;
+  --dark-success-bg: rgba(22, 163, 74, 0.14);
+  --dark-warn: #fde68a;
+  --dark-warn-dot: #f59e0b;
+  --dark-warn-bg: rgba(217, 119, 6, 0.16);
+  --dark-idle-dot: #71717a;
+  --dark-idle-bg: rgba(255, 255, 255, 0.08);
+  --dark-danger: #f87171;
+}

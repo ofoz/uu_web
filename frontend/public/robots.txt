@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /wisp
+
+Sitemap: https://uurc.678234.xyz/sitemap.xml

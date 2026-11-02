@@ -1,0 +1,138 @@
+.transport-details {
+  margin: 10px 0 0;
+}
+
+.advanced-actions,
+.diagnostics-details,
+.debug-details,
+.debug-events-details,
+.identity-details,
+.login-import,
+.session-details,
+.protocol-details {
+  margin-top: 10px;
+}
+
+.advanced-actions summary,
+.diagnostics-details summary,
+.debug-details summary,
+.debug-events-details summary,
+.identity-details summary,
+.login-import summary,
+.session-details summary,
+.protocol-details summary {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12.5px;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+
+.advanced-actions summary::-webkit-details-marker,
+.diagnostics-details summary::-webkit-details-marker,
+.debug-details summary::-webkit-details-marker,
+.debug-events-details summary::-webkit-details-marker,
+.identity-details summary::-webkit-details-marker,
+.login-import summary::-webkit-details-marker,
+.session-details summary::-webkit-details-marker,
+.protocol-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.advanced-actions summary::after,
+.diagnostics-details summary::after,
+.debug-details summary::after,
+.debug-events-details summary::after,
+.identity-details summary::after,
+.login-import summary::after,
+.session-details summary::after,
+.protocol-details summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  opacity: 0.72;
+  transform: rotate(45deg);
+  transition:
+    transform 0.14s ease,
+    opacity 0.14s ease;
+}
+
+.advanced-actions[open] summary::after,
+.diagnostics-details[open] summary::after,
+.login-import[open] summary::after,
+.session-details[open] summary::after,
+.debug-details[data-expanded="true"] summary::after,
+.debug-events-details[data-expanded="true"] summary::after,
+.protocol-details[data-expanded="true"] summary::after {
+  transform: rotate(225deg);
+}
+
+.identity-details[data-expanded="true"] summary::after {
+  transform: rotate(225deg);
+}
+
+.advanced-actions summary:hover,
+.diagnostics-details summary:hover,
+.debug-details summary:hover,
+.debug-events-details summary:hover,
+.identity-details summary:hover,
+.login-import summary:hover,
+.session-details summary:hover,
+.protocol-details summary:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.advanced-actions summary:hover::after,
+.diagnostics-details summary:hover::after,
+.debug-details summary:hover::after,
+.debug-events-details summary:hover::after,
+.identity-details summary:hover::after,
+.login-import summary:hover::after,
+.session-details summary:hover::after,
+.protocol-details summary:hover::after {
+  opacity: 1;
+}
+
+.advanced-actions[open],
+.diagnostics-details[open],
+.session-details[open],
+.debug-details[open],
+.debug-events-details[open] {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 8px;
+  background: var(--surface-2);
+}
+
+.identity-details[open] {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 8px;
+  background: var(--surface-2);
+}
+
+.advanced-actions[open] summary,
+.diagnostics-details[open] summary,
+.login-import[open] summary,
+.session-details[open] summary,
+.debug-details[open] summary,
+.debug-events-details[open] summary {
+  margin-bottom: 10px;
+}
+
+.identity-details[open] summary {
+  margin-bottom: 10px;
+}

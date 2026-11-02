@@ -1,0 +1,20 @@
+/app
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/app.html
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/login
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/devices
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/devices/*
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/partner
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/account
+  X-Robots-Tag: noindex, nofollow, noarchive

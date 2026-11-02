@@ -1,0 +1,148 @@
+.control-command-bar {
+  /* 默认停靠在画面底部居中；从把手拖动后切到 fixed 视口坐标，并约束在远控画布内。 */
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  gap: 4px;
+  margin: 0;
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-xl);
+  background: var(--dark-toolbar-bg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  padding: 5px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  overflow: visible;
+  touch-action: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.control-stage-frame--fullscreen .control-command-bar {
+  top: 16px;
+  bottom: auto;
+}
+
+/* 全屏空闲隐藏：只淡出、不做位移，避免拖动过（position:fixed）的工具栏被二次平移。 */
+.control-command-bar--idle-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fullscreen-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 4;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 11.5px;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.fullscreen-hint--idle-hidden {
+  opacity: 0;
+}
+
+.command-action-group {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.command-drag-handle {
+  width: 34px;
+  padding: 0;
+  cursor: grab;
+}
+
+.command-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* 顶部悬浮重连恢复条：画面保留最后一帧，恢复条居中浮在其上。 */
+.reconnect-banner {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  translate: -50% 0;
+  transform-origin: center top;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  max-width: calc(100% - 32px);
+  padding: 0 8px 0 14px;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  background: rgba(45, 26, 7, 0.92);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--dark-warn);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.reconnect-banner span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reconnect-banner-spinner {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(251, 191, 36, 0.3);
+  border-top-color: var(--dark-warn-dot);
+  animation: spin 0.9s linear infinite;
+}
+
+.reconnect-banner button {
+  flex: 0 0 auto;
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.14);
+  color: var(--dark-warn);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reconnect-banner-spinner {
+    animation: none;
+  }
+}
+
+.control-command-bar button,
+.shortcut-menu > summary {
+  min-height: 38px;
+  border-color: transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.control-command-bar button:hover:not(:disabled),
+.shortcut-menu > summary:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}

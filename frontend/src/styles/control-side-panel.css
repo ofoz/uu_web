@@ -1,0 +1,101 @@
+/* 会话右侧面板：状态 / 剪贴板 / 设置 三个 Tab，靠 token 覆盖把已有浅色组件整体转深色。 */
+.control-side-panel {
+  /* .control-shell 已把 --surface/--border/--text 等覆盖成深色令牌，这里只补一个
+     侧边栏专属的强调色浅底（比 .control-shell 默认的更亮，适配 300px 窄栏对比度）。 */
+  --accent-soft: rgba(37, 99, 235, 0.16);
+
+  flex: 0 0 300px;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--dark-border);
+  background: var(--dark-panel);
+  color: var(--dark-text);
+  overflow: hidden;
+  transform-origin: right center;
+}
+
+.control-side-panel > .tabs {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.control-side-panel .tabs-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.control-side-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.control-settings-tab {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-panel-detail {
+  margin: 0 0 10px;
+  color: var(--dark-text-muted);
+  font-size: 12.5px;
+}
+
+.metric-panel-hint {
+  margin-top: 6px;
+  color: var(--dark-text-dim);
+  font-size: 11.5px;
+}
+
+.metric-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--dark-border);
+  font-size: 12px;
+}
+
+.metric-rows .metric-row:last-child {
+  border-bottom: none;
+}
+
+.metric-row span {
+  color: var(--dark-text-muted);
+}
+
+.metric-row strong {
+  color: var(--dark-text);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.video-source-caption {
+  margin-bottom: 8px;
+  color: var(--dark-text-dim);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.video-source-panel .video-source-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
