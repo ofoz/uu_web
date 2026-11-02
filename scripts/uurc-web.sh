@@ -138,15 +138,35 @@ app() {
     --app="$URL" \
     --class=uurc-web \
     --user-data-dir="$APP_PROFILE" \
-    --start-fullscreen \
-    --window-size=1440,900 \
+    --start-maximized \
     --no-first-run \
     --no-default-browser-check \
     --disable-features=Translate,MediaRouter,OptimizationHints \
     --disable-sync \
     --noerrdialogs \
     >>"$APP_LOG" 2>&1 </dev/null &
-  echo "已打开独立窗口：$URL"
+
+  # Chrome 把 WM_CLASS 的 instance 段设成 URL 主机名（127.0.0.1、localhost），
+  # 有的桌面环境按这一段匹配应用图标，会落到「无图标」的兜底。等窗口出现后统一改为 uurc-web。
+  if command -v xdotool >/dev/null 2>&1; then
+    (
+      for _ in $(seq 1 20); do
+        ids=$(xdotool search --class uurc-web 2>/dev/null)
+        if [ -n "$ids" ]; then
+          for id in $ids; do
+            case "$(xprop -id "$id" WM_CLASS 2>/dev/null)" in
+              *'"uurc-web", "uurc-web"'*) ;;
+              *) xdotool set_window --classname uurc-web --class uurc-web "$id" 2>/dev/null ;;
+            esac
+          done
+          break
+        fi
+        sleep 1
+      done
+    ) >/dev/null 2>&1 &
+  fi
+
+  echo "已打开独立窗口（最大化）：$URL"
 }
 
 case "${1:-start}" in
