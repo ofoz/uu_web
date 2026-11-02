@@ -101,12 +101,6 @@ export function AppShell({
 
         <div className="app-sidebar-spacer" />
 
-        {desktopBridge ? (
-          <div className="app-sidebar-window-row">
-            <DesktopWindowControls bridge={desktopBridge} />
-          </div>
-        ) : null}
-
         <div className="app-sidebar-identity">
           <span className="app-sidebar-identity-dot" aria-hidden="true" />
           <div className="app-sidebar-identity-text">
@@ -141,6 +135,16 @@ export function AppShell({
       </div>
 
       <CommandPalette {...palette} />
+
+      {/*
+        无边框窗口的三个按钮固定贴在视口右上角——和系统标题栏按钮同一位置，
+        不随侧栏宽度、页面滚动或远控页顶栏的显隐而漂移。
+      */}
+      {desktopBridge ? (
+        <div className="desktop-window-dock">
+          <DesktopWindowControls bridge={desktopBridge} />
+        </div>
+      ) : null}
     </div>
   );
 }

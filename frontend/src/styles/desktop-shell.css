@@ -38,11 +38,53 @@
   color: #f87171;
 }
 
-/* 侧栏里的窗口按钮行：贴右侧，和系统标题栏按钮的位置习惯一致。 */
-.app-sidebar-window-row {
+/*
+ * 窗口按钮的停靠点：固定贴住视口右上角，也就是系统标题栏按钮原本的位置。
+ * 用 fixed 而不是页面内的 flow 布局，才能保证切页、滚动、侧栏伸缩、
+ * 远控顶栏显隐都不会让三个按钮跟着漂移。
+ */
+.desktop-window-dock {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 90;
   display: flex;
-  justify-content: flex-end;
-  padding: 2px 6px 6px;
+  align-items: center;
+  padding: 4px 6px 0;
+  /* 停靠区只是给按钮定位，别把下面页面的点击吞掉；按钮自己恢复可点。 */
+  pointer-events: none;
+  -webkit-app-region: no-drag;
+}
+
+.desktop-window-dock .desktop-window-controls {
+  pointer-events: auto;
+}
+
+/*
+ * 右上角让出窗口按钮的宽度（3×28 + 间隙 + 内边距 ≈ 100px），
+ * 否则普通页的标题栏和远控页的「会话面板/断开」会被压在按钮下面。
+ */
+.uurc-desktop .shell-page-topbar,
+.uurc-desktop .control-topbar {
+  padding-right: 104px;
+}
+
+/*
+ * 远控页整体是深色主题（.control-shell 覆盖了深色令牌），而按钮停靠在它外面，
+ * 默认会继承浅色页面的深色文字，压在深色顶栏上几乎看不见。这里单独转成浅色。
+ */
+.uurc-desktop:has(.control-shell) .desktop-window-dock .desktop-window-button {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 远控全屏时画面铺满，按钮降低存在感；鼠标移上去恢复，不影响取景。 */
+.uurc-desktop:has(.control-stage-frame--fullscreen) .desktop-window-dock {
+  opacity: 0.32;
+  transition: opacity 0.18s ease;
+}
+
+.uurc-desktop:has(.control-stage-frame--fullscreen) .desktop-window-dock:hover {
+  opacity: 1;
 }
 
 /*

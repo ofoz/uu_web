@@ -4,8 +4,6 @@ import type { RefObject } from "react";
 import type { UuDevice } from "@uurc/shared/devices";
 
 import type { BusyAction, RemoteConnectionQuality } from "../app/remoteControlTypes.js";
-import { DesktopWindowControls } from "../desktop/DesktopWindowControls.js";
-import { useDesktopBridge } from "../desktop/useDesktopBridge.js";
 import type { BrowserRemoteSessionState } from "../remote/browserRemoteSessionTypes.js";
 import { RemoteControlConnectionStats } from "./RemoteControlConnectionStats.js";
 import { RemoteScreenPicker } from "./RemoteScreenPicker.js";
@@ -52,7 +50,6 @@ export function RemoteControlTopbar({
   chromeHoverBindings?: FullscreenChromeHoverBindings;
   topbarRef?: RefObject<HTMLElement | null>;
 }) {
-  const desktopBridge = useDesktopBridge();
   const stage = browserRemoteState.stage;
   const negotiating = stage === "controlled" || stage === "offered";
   const pillState = stage === "connected" ? "ready" : negotiating ? "connecting" : "idle";
@@ -117,7 +114,6 @@ export function RemoteControlTopbar({
           断开
         </button>
       ) : null}
-      {desktopBridge ? <DesktopWindowControls bridge={desktopBridge} /> : null}
     </header>
   );
 }

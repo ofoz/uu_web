@@ -1,6 +1,6 @@
 import { MonitorX, TerminalSquare } from "lucide-react";
 import { AnimatePresence } from "motion/react";
-import { useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 import { RemoteCommandBar, type RemoteCommandBarProps } from "./RemoteCommandBar.js";
 import type { RemoteClipboardPanelProps } from "./RemoteClipboardPanel.js";
@@ -44,6 +44,7 @@ export function RemoteControlPage(props: RemoteControlPageProps) {
   const [sidePanelTab, setSidePanelTab] = useState("status");
   const [occupiedDialogOpen, setOccupiedDialogOpen] = useState(false);
   const [occupancyAcknowledged, setOccupancyAcknowledged] = useState(false);
+  const [takeoverPending, setTakeoverPending] = useState(false);
 
   // 顶栏、状态徽标、工具栏统一走自动隐藏。
   // 连接成功后画面就是主角：即使没进全屏也先隐身，鼠标触顶或靠近它们再唤出；
@@ -70,9 +71,22 @@ export function RemoteControlPage(props: RemoteControlPageProps) {
   function resolveOccupiedDialog(force: boolean) {
     setOccupiedDialogOpen(false);
     setOccupancyAcknowledged(true);
-    if (force) props.settings.onForceJoinChange(true);
-    props.commandBar.onNextAction();
+    if (!force) {
+      props.commandBar.onNextAction();
+      return;
+    }
+    // setForceJoin 是异步的：直接接着调 onNextAction，拿到的还是旧闭包里的
+    // forceJoin=false，等于又普通加入一次又被拒。改成置标记，等 forceJoin
+    // 落到新一次渲染后再触发，这次才会真的走强制接管。
+    props.settings.onForceJoinChange(true);
+    setTakeoverPending(true);
   }
+
+  useEffect(() => {
+    if (!takeoverPending || !props.settings.forceJoin) return;
+    setTakeoverPending(false);
+    props.commandBar.onNextAction();
+  }, [props.commandBar, props.settings.forceJoin, takeoverPending]);
 
   if (shell.deviceNotFound) {
     return (
