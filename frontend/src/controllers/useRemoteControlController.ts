@@ -268,6 +268,18 @@ export function useRemoteControlController(context: RemoteControlContext) {
     navigate("/devices");
   }
 
+  // 顶栏的「断开」是明确的结束动作：释放会话后直接回设备列表，不再需要二次确认。
+  async function handleDisconnectRemote() {
+    if (busy !== null) return;
+    try {
+      await handleStopSignalGateway();
+    } finally {
+      // 释放房间失败也不能把用户留在黑屏的控制页上。
+      onControlLeave();
+      navigate("/devices");
+    }
+  }
+
   function resetBrowserRemoteSession() {
     closeBrowserRemoteSession();
     resetClipboardSession();
@@ -506,6 +518,7 @@ export function useRemoteControlController(context: RemoteControlContext) {
       busy,
       canDisconnectRemote,
       connectionQuality,
+      onDisconnectRemote: () => void handleDisconnectRemote(),
       onReturnToDevices: () => void handleReturnToDevices(),
       onStopSignalGateway: () => void handleStopSignalGateway(),
       selectedDevice,

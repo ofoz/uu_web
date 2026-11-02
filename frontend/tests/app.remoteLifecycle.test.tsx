@@ -262,7 +262,7 @@ describe("App remote lifecycle", () => {
     expect(uuCalls("/api/v1/room/join/by_device/desktop-1")).toHaveLength(1);
   });
 
-  it("shows a first-class disconnect action that closes the browser remote session", async () => {
+  it("returns to the device list after the topbar disconnect action", async () => {
     vi.stubGlobal("RTCPeerConnection", TestPeerConnection);
     appBackend.currentParticipants = [];
     const user = userEvent.setup();
@@ -293,8 +293,9 @@ describe("App remote lifecycle", () => {
       ).toBe(true);
     });
     expect(TestPeerConnection.closed).toBe(true);
-    expect(screen.getAllByText("已关闭").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("已释放房间").length).toBeGreaterThan(0);
+    // 断开是结束动作：不该停在黑屏的控制页，直接回设备列表。
+    await screen.findByRole("heading", { name: "我的设备" });
+    expect(screen.queryByRole("button", { name: "断开" })).not.toBeInTheDocument();
   });
 
   it("disconnects the active remote session before returning to the device list", async () => {

@@ -16,6 +16,7 @@ export interface RemoteControlTopbarProps {
   busy: BusyAction;
   canDisconnectRemote: boolean;
   connectionQuality: RemoteConnectionQuality;
+  onDisconnectRemote: () => void;
   onReturnToDevices: () => void;
   onStopSignalGateway: () => void;
   selectedDevice: UuDevice | null;
@@ -28,6 +29,7 @@ export function RemoteControlTopbar({
   busy,
   canDisconnectRemote,
   connectionQuality,
+  onDisconnectRemote,
   onReturnToDevices,
   onStopSignalGateway,
   selectedDevice,
@@ -110,9 +112,9 @@ export function RemoteControlTopbar({
       ) : canDisconnectRemote ? (
         <button
           className="control-topbar-disconnect"
-          onClick={onStopSignalGateway}
+          onClick={onDisconnectRemote}
           disabled={busy !== null}
-          title="断开连接，释放设备占用"
+          title="断开连接，释放设备占用并返回设备列表"
         >
           {busy === "signal-stop" ? <LoaderCircle className="spin" size={14} /> : <CircleStop size={14} />}
           断开
