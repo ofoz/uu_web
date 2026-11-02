@@ -8,6 +8,8 @@ APP_DIR="${UURC_DIR:-$(dirname "$SELF_DIR")}"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/uurc-web"
 PID_FILE="$STATE_DIR/uurc-web.pid"
 LOG_FILE="$STATE_DIR/uurc-web.log"
+APP_PROFILE="${XDG_DATA_HOME:-$HOME/.local/share}/uurc-web/app-profile"
+APP_LOG="$STATE_DIR/app.log"
 HOST="${UURC_HOST:-127.0.0.1}"
 PORT="${UURC_PORT:-8787}"
 URL="http://$HOST:$PORT/"
@@ -86,11 +88,72 @@ open_url() {
   xdg-open "$URL" >/dev/null 2>&1 &
 }
 
+# 找一个支持 --app 的 Chromium 内核浏览器
+find_chrome() {
+  local candidate
+  for candidate in \
+    "${UURC_CHROME:-}" \
+    "$(command -v google-chrome-stable 2>/dev/null)" \
+    "$(command -v google-chrome 2>/dev/null)" \
+    "$(command -v chromium 2>/dev/null)" \
+    "$(command -v chromium-browser 2>/dev/null)" \
+    /usr/bin/google-chrome-stable \
+    /usr/bin/google-chrome \
+    /opt/google/chrome/chrome; do
+    [ -n "$candidate" ] && [ -x "$candidate" ] && { echo "$candidate"; return 0; }
+  done
+  return 1
+}
+
+# 独立窗口（Chrome app 模式）：无地址栏、无标签页、任务栏独立图标
+app() {
+  start >/dev/null 2>&1 || true
+  if ! pid_alive && ! port_busy; then
+    echo "服务未能启动，请先执行：$0 start"
+    return 1
+  fi
+
+  local chrome
+  if ! chrome=$(find_chrome); then
+    echo "未找到 Chrome/Chromium，退回默认浏览器打开"
+    xdg-open "$URL" >/dev/null 2>&1 &
+    return 0
+  fi
+
+  # 已有窗口就聚焦，避免重复点击开出一堆窗口
+  if command -v xdotool >/dev/null 2>&1; then
+    local existing
+    existing=$(xdotool search --class uurc-web 2>/dev/null | head -1)
+    if [ -n "$existing" ]; then
+      xdotool windowactivate "$existing" 2>/dev/null && {
+        echo "窗口已在运行，已切到前台"
+        return 0
+      }
+    fi
+  fi
+
+  mkdir -p "$APP_PROFILE" "$STATE_DIR"
+  # 独立 user-data-dir：与日常浏览的 Chrome 完全隔离，关掉浏览器不影响远控窗口
+  setsid "$chrome" \
+    --app="$URL" \
+    --class=uurc-web \
+    --user-data-dir="$APP_PROFILE" \
+    --window-size=1440,900 \
+    --no-first-run \
+    --no-default-browser-check \
+    --disable-features=Translate,MediaRouter,OptimizationHints \
+    --disable-sync \
+    --noerrdialogs \
+    >>"$APP_LOG" 2>&1 </dev/null &
+  echo "已打开独立窗口：$URL"
+}
+
 case "${1:-start}" in
   start)   start ;;
   stop)    stop ;;
   restart) stop; sleep 1; start ;;
   status)  status ;;
+  app)     app ;;
   open)    open_url ;;
-  *)       echo "用法: $0 {start|stop|restart|status|open}" ;;
+  *)       echo "用法: $0 {start|stop|restart|status|app|open}" ;;
 esac

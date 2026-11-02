@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=UU 远程（网页版）
+Name[en]=UU Remote Web
+GenericName=远程桌面主控端
+Comment=独立窗口里作为主控端连接 UU 远程设备（本地服务 127.0.0.1:8787）
+Keywords=UU;远程;远控;remote;remotecontrol;
+# %h 会自动展开成当前用户的家目录
+Exec=%h/.local/bin/uurc-web app
+Icon=uurc-web
+Terminal=false
+Categories=Network;RemoteAccess;
+StartupNotify=true
+# 与 --class=uurc-web 对应，桌面环境据此把窗口归到本图标下
+StartupWMClass=uurc-web

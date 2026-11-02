@@ -37,7 +37,7 @@ UU 官方只提供 Windows / macOS 客户端。如果你主要在 Linux 上工�
 | 修复状态徽标吞点击             | `frontend/src/styles/stage.css`                                                                           | 补 `pointer-events: none`                                                                                                                                                  |
 | 修复工具栏拖动后位置错乱       | `frontend/src/styles/control-command-bar.css`                                                             | 隐藏态去掉 `transform`，避免与 fixed 坐标叠加二次平移                                                                                                                      |
 | 本地构建配置                   | `frontend/vite.local.config.ts`                                                                           | 关闭 `publicDir` 自动复制，静态资源用 `cp` 手动拷贝，绕开部分环境下 Node `copyFile` 被拦截的问题                                                                           |
-| 服务管理脚本                   | `scripts/uurc-web.sh`                                                                                     | `start/stop/restart/status/open`，只监听 `127.0.0.1`                                                                                                                       |
+| 服务管理脚本                   | `scripts/uurc-web.sh`                                                                                     | `start/stop/restart/status/app/open`；`app` 用独立窗口打开（Chrome app 模式，无地址栏与标签页），其余只监听 `127.0.0.1`                                                    |
 
 ## 快速开始（Linux 本地）
 
@@ -54,7 +54,8 @@ npm run build          # shared → backend → frontend，顺序不能反
 
 ```bash
 ./scripts/uurc-web.sh start     # 后台运行，日志在 ~/.local/state/uurc-web/
-./scripts/uurc-web.sh open      # 起服务并打开浏览器
+./scripts/uurc-web.sh app       # 起服务并用独立窗口打开（推荐日常使用）
+./scripts/uurc-web.sh open      # 起服务并在默认浏览器的标签页里打开
 ./scripts/uurc-web.sh status
 ./scripts/uurc-web.sh stop
 ```
@@ -66,6 +67,23 @@ node backend/dist/index.js      # 默认 0.0.0.0:8787，生产环境建议 HOST=
 ```
 
 后端会把 `frontend/dist` 一起托管，所以 `8787` 一个端口就是完整应用，不需要额外的 nginx。
+
+### 作为桌面应用运行（独立窗口）
+
+`app` 子命令用 Chrome/Chromium 的 app 模式打开页面，得到一个**没有地址栏、没有标签页**的独立窗口，任务栏上是它自己的图标，不会和日常浏览混在一起：
+
+```bash
+./scripts/uurc-web.sh app
+```
+
+实现要点：
+
+- `--app=URL` 去掉浏览器 UI；`--class=uurc-web` 让 `WM_CLASS` 变成 `uurc-web`，桌面环境的任务栏/坞栏据此匹配到 `.desktop` 里的图标（配合 `StartupWMClass=uurc-web`）
+- `--user-data-dir=~/.local/share/uurc-web/app-profile` 用**独立配置目录**，与日常浏览的 Chrome 完全隔离：关掉浏览器不影响远控窗口，浏览器里的标签也不会和它抢窗口
+- 已经开过窗口时再点一次，会用 `xdotool` 把已有窗口切到前台，不会开出一堆重复窗口
+- 找不到 Chrome/Chromium 时自动退回默认浏览器打开
+
+想让它出现在应用菜单里，把仓库里的 `packaging/uurc-web.desktop` 复制到 `~/.local/share/applications/`，并把 `Exec=` 和 `Icon=` 改成自己的路径即可。
 
 ### 环境变量
 
