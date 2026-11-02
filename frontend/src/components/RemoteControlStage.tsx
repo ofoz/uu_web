@@ -28,10 +28,8 @@ import { RemoteVideoTile } from "./RemoteVideoTile.js";
 
 export interface RemoteControlStageProps {
   browserRemoteState: BrowserRemoteSessionState;
-  browserStageLabel: string;
   hasRemoteVideo: boolean;
   inputControlActive: boolean;
-  inputControlLabel: string;
   onRemoteStageKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
   onRemoteStageKeyUp: (event: KeyboardEvent<HTMLDivElement>) => void;
   onRemoteStageBlur: () => void;
@@ -46,19 +44,15 @@ export interface RemoteControlStageProps {
   primaryRemoteVideoId: string;
   remoteStageRef: RefObject<HTMLDivElement | null>;
   remoteStageViewMode: RemoteStageViewMode;
-  remoteVideoCount: number;
   remoteVideoStreams: RemoteVideoStream[];
   selectedDevice: UuDevice | null;
   stageStatusLabel: string;
-  videoFlowLabel: string;
 }
 
 export function RemoteControlStage({
   browserRemoteState,
-  browserStageLabel,
   hasRemoteVideo,
   inputControlActive,
-  inputControlLabel,
   onRemoteStageKeyDown,
   onRemoteStageKeyUp,
   onRemoteStageBlur,
@@ -73,13 +67,10 @@ export function RemoteControlStage({
   primaryRemoteVideoId,
   remoteStageRef,
   remoteStageViewMode,
-  remoteVideoCount,
   remoteVideoStreams,
   selectedDevice,
   stageStatusLabel,
-  videoFlowLabel,
-  chromeHidden,
-}: RemoteControlStageProps & { chromeHidden: boolean }) {
+}: RemoteControlStageProps) {
   return (
     <div
       ref={remoteStageRef}
@@ -123,9 +114,6 @@ export function RemoteControlStage({
               <span>这一路当前没有画面输出，可在右侧「画面源」切换到其他画面。</span>
             </div>
           ) : null}
-          <div className={`stage-badge${chromeHidden ? " stage-badge--idle-hidden" : ""}`} aria-hidden={chromeHidden}>
-            {browserStageLabel} · {remoteVideoCount} 路视频 · {videoFlowLabel} · 输入 {inputControlLabel}
-          </div>
           <RemoteCursorOverlay />
         </>
       ) : stageStatusLabel === "连接中…" ? (

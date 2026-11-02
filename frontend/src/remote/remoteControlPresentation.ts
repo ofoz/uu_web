@@ -115,11 +115,6 @@ export function createRemoteControlPresentation(input: RemoteControlPresentation
   const browserRtcReady = roomReadyForBrowserRtc && input.busy === null && !input.browserWebRtcUnavailableReason;
   const connectionPathLabel = formatConnectionPath(input.browserRemoteState.connectionPath);
   const controlChannelLabel = formatDataChannelState(input.controlChannelState);
-  const inputControlLabel = input.inputControlActive
-    ? "控制中"
-    : input.controlChannelState === "open"
-      ? "仅查看"
-      : controlChannelLabel;
   const videoFlowStatus = input.browserRemoteState.videoFlow?.status;
   const decodeStalledPersisted =
     (videoFlowStatus === "decode_stalled" || videoFlowStatus === "presentation_stalled") &&
@@ -249,7 +244,6 @@ export function createRemoteControlPresentation(input: RemoteControlPresentation
     iceControlStatusLabel,
     inboundAudioStatsLabel: formatInboundAudioStats(input.browserRemoteState.inboundAudio),
     inboundVideoStatsLabel: formatInboundVideoStats(input.browserRemoteState.inboundVideo),
-    inputControlLabel,
     joinModeLabel: input.forceJoin ? "接管控制" : "普通加入",
     networkSwitchSummary: summarizeSwitchNetworkNotify(input.signalEvents),
     nextAction,

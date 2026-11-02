@@ -350,6 +350,7 @@ describe("App remote lifecycle", () => {
 
     await user.click(screen.getByRole("tab", { name: "状态" }));
     expect(screen.getByRole("region", { name: "画面源" })).toBeInTheDocument();
-    expect(screen.getByText(/2 路视频/)).toBeInTheDocument();
+    // 远控画面不再叠状态角标，画面源数量改由「画面源」面板呈现。
+    expect(screen.getByText(/画面源 · 2 路/)).toBeInTheDocument();
   });
 });

@@ -150,7 +150,7 @@ export function RemoteControlPage(props: RemoteControlPageProps) {
           className={`control-stage-frame${shell.isFullscreen ? " control-stage-frame--fullscreen" : ""}`}
           ref={shell.remoteStageFrameRef}
         >
-          <RemoteControlStage {...props.stage} chromeHidden={chrome.hidden} />
+          <RemoteControlStage {...props.stage} />
           <RemoteReconnectBanner {...props.reconnect} />
           {shell.isFullscreen ? (
             <div className={`fullscreen-hint${chrome.hidden ? " fullscreen-hint--idle-hidden" : ""}`}>
