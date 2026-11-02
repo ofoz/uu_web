@@ -1,6 +1,6 @@
 import { MonitorX, TerminalSquare } from "lucide-react";
 import { AnimatePresence } from "motion/react";
-import { useRef, useState, type RefObject } from "react";
+import { useMemo, useRef, useState, type RefObject } from "react";
 
 import { RemoteCommandBar, type RemoteCommandBarProps } from "./RemoteCommandBar.js";
 import type { RemoteClipboardPanelProps } from "./RemoteClipboardPanel.js";
@@ -45,9 +45,14 @@ export function RemoteControlPage(props: RemoteControlPageProps) {
   const [occupiedDialogOpen, setOccupiedDialogOpen] = useState(false);
   const [occupancyAcknowledged, setOccupancyAcknowledged] = useState(false);
 
-  // 全屏时状态徽标、工具栏、提示文案统一自动隐藏，鼠标触顶或靠近工具栏再唤出。
+  // 顶栏、状态徽标、工具栏统一走自动隐藏。
+  // 连接成功后画面就是主角：即使没进全屏也先隐身，鼠标触顶或靠近它们再唤出；
+  // 未连接时保持常驻，否则用户找不到「开始连接」这类入口。
   const chromeAnchorRef = useRef<HTMLElement | null>(null);
-  const chrome = useFullscreenChromeAutoHide(shell.isFullscreen, chromeAnchorRef);
+  const topbarRef = useRef<HTMLElement | null>(null);
+  const chromeAnchors = useMemo(() => [topbarRef, chromeAnchorRef], []);
+  const immersive = shell.isFullscreen || props.stage.browserRemoteState.stage === "connected";
+  const chrome = useFullscreenChromeAutoHide(immersive, chromeAnchors);
 
   const { occupiedBySelfClient, selectedDeviceOccupied } = props.warnings;
   // 若用户已在“设置”里显式选择了“接管控制”，无需再弹一次确认对话框。
@@ -100,6 +105,10 @@ export function RemoteControlPage(props: RemoteControlPageProps) {
         screenPicker={props.insights.videoSources}
         panelOpen={panelOpen}
         onTogglePanel={() => setPanelOpen((open) => !open)}
+        fullscreen={shell.isFullscreen}
+        chromeHidden={chrome.hidden}
+        chromeHoverBindings={chrome.hoverBindings}
+        topbarRef={topbarRef}
       />
 
       {shell.error ? (

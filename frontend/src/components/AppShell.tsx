@@ -6,6 +6,8 @@ import { Link, NavLink, useLocation, useOutlet } from "react-router";
 import type { UuDeviceGroups } from "@uurc/shared/devices";
 
 import { useCommandPaletteController } from "../controllers/useCommandPaletteController.js";
+import { DesktopWindowControls } from "../desktop/DesktopWindowControls.js";
+import { useDesktopBridge } from "../desktop/useDesktopBridge.js";
 import { tabIndicatorTransition } from "../motion/presets.js";
 import { CommandPalette } from "./CommandPalette.js";
 
@@ -66,6 +68,7 @@ export function AppShell({
   onOpenDevice: (deviceId: string) => void;
   onLoadDevices: () => void;
 }) {
+  const desktopBridge = useDesktopBridge();
   const palette = useCommandPaletteController({ devices, onOpenDevice, onLoadDevices });
   const deviceCount = devices.desktopDevices.length + devices.mobileDevices.length + devices.tvDevices.length;
   const location = useLocation();
@@ -97,6 +100,12 @@ export function AppShell({
         </LayoutGroup>
 
         <div className="app-sidebar-spacer" />
+
+        {desktopBridge ? (
+          <div className="app-sidebar-window-row">
+            <DesktopWindowControls bridge={desktopBridge} />
+          </div>
+        ) : null}
 
         <div className="app-sidebar-identity">
           <span className="app-sidebar-identity-dot" aria-hidden="true" />

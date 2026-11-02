@@ -285,6 +285,7 @@ export class BrowserRemoteSession {
     this.setState({
       appControlId: input.appControlId,
       clientId: result.clientId,
+      connectedAtMs: undefined,
       connectionPath: "unknown",
       controlIceIdMatch: input.iceId && result.iceId ? input.iceId === result.iceId : undefined,
       controlResult: result,
@@ -662,6 +663,8 @@ export class BrowserRemoteSession {
       });
       this.setState({
         ...this.state,
+        // 只在首次连上时打点：restart_ice 重协商沿用原起点，时长不会归零。
+        connectedAtMs: this.state.connectedAtMs ?? this.now(),
         stage: "connected",
       });
       await this.flushQueuedCandidates(peer, lifecycleGeneration);

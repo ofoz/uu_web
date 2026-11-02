@@ -1,17 +1,23 @@
 import { ChevronLeft, CircleStop, LoaderCircle, PanelRight } from "lucide-react";
+import type { RefObject } from "react";
 
 import type { UuDevice } from "@uurc/shared/devices";
 
-import type { BusyAction } from "../app/remoteControlTypes.js";
+import type { BusyAction, RemoteConnectionQuality } from "../app/remoteControlTypes.js";
+import { DesktopWindowControls } from "../desktop/DesktopWindowControls.js";
+import { useDesktopBridge } from "../desktop/useDesktopBridge.js";
 import type { BrowserRemoteSessionState } from "../remote/browserRemoteSessionTypes.js";
+import { RemoteControlConnectionStats } from "./RemoteControlConnectionStats.js";
 import { RemoteScreenPicker } from "./RemoteScreenPicker.js";
 import { StatusPill } from "./StatusPill.js";
 import type { RemoteVideoSourcePanelProps } from "./RemoteVideoSourcePanel.js";
+import type { FullscreenChromeHoverBindings } from "./useFullscreenChromeAutoHide.js";
 
 export interface RemoteControlTopbarProps {
   browserRemoteState: BrowserRemoteSessionState;
   busy: BusyAction;
   canDisconnectRemote: boolean;
+  connectionQuality: RemoteConnectionQuality;
   onReturnToDevices: () => void;
   onStopSignalGateway: () => void;
   selectedDevice: UuDevice | null;
@@ -23,6 +29,7 @@ export function RemoteControlTopbar({
   browserRemoteState,
   busy,
   canDisconnectRemote,
+  connectionQuality,
   onReturnToDevices,
   onStopSignalGateway,
   selectedDevice,
@@ -31,18 +38,35 @@ export function RemoteControlTopbar({
   screenPicker,
   panelOpen,
   onTogglePanel,
+  fullscreen = false,
+  chromeHidden = false,
+  chromeHoverBindings,
+  topbarRef,
 }: RemoteControlTopbarProps & {
   screenPicker: RemoteVideoSourcePanelProps;
   panelOpen: boolean;
   onTogglePanel: () => void;
+  fullscreen?: boolean;
+  // 全屏时顶栏跟随状态徽标一起自动隐藏，鼠标触顶或移上来才显示。
+  chromeHidden?: boolean;
+  chromeHoverBindings?: FullscreenChromeHoverBindings;
+  topbarRef?: RefObject<HTMLElement | null>;
 }) {
+  const desktopBridge = useDesktopBridge();
   const stage = browserRemoteState.stage;
   const negotiating = stage === "controlled" || stage === "offered";
   const pillState = stage === "connected" ? "ready" : negotiating ? "connecting" : "idle";
   const pillLabel = stage === "connected" ? "已连接" : negotiating ? "连接中" : signalGatewayDisplay;
+  const className = [
+    "control-topbar",
+    fullscreen ? "control-topbar--overlay" : "",
+    chromeHidden ? "control-topbar--chrome-hidden" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <header className="control-topbar">
+    <header className={className} ref={topbarRef} {...chromeHoverBindings}>
       <button
         className="icon-button icon-button-dark"
         onClick={onReturnToDevices}
@@ -56,6 +80,12 @@ export function RemoteControlTopbar({
       <StatusPill dark state={pillState}>
         {pillLabel}
       </StatusPill>
+      {stage === "connected" ? (
+        <RemoteControlConnectionStats
+          connectedAtMs={browserRemoteState.connectedAtMs}
+          connectionQuality={connectionQuality}
+        />
+      ) : null}
       <span className="control-topbar-spacer" />
       <RemoteScreenPicker {...screenPicker} />
       <button
@@ -87,6 +117,7 @@ export function RemoteControlTopbar({
           断开
         </button>
       ) : null}
+      {desktopBridge ? <DesktopWindowControls bridge={desktopBridge} /> : null}
     </header>
   );
 }

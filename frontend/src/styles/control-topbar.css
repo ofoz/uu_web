@@ -1,3 +1,99 @@
+/* 全屏时顶栏浮在画面上并参与自动隐藏：触顶/移入唤出，鼠标离开后淡出。 */
+.control-topbar--overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  min-height: 48px;
+  padding: 0 12px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--dark-border);
+  background: rgba(16, 16, 18, 0.86);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.control-topbar--overlay.control-topbar--chrome-hidden {
+  opacity: 0;
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+/* 「已连接」后面的实时指标：时长 / 延迟 / 帧率，紧凑到不挤压标题。 */
+.control-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.control-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 7px;
+  border: 1px solid var(--dark-border);
+  border-radius: 999px;
+  background: var(--dark-surface-1);
+  color: var(--dark-text-muted);
+}
+
+.control-stat svg {
+  color: var(--dark-text-dim);
+  flex: 0 0 auto;
+}
+
+.control-stat-value {
+  font-weight: 500;
+}
+
+/* 延迟、帧率跟随连接质量评级变色；采样中保持中性灰。 */
+.control-stats.quality-good .control-stat-metric {
+  color: var(--dark-success);
+}
+
+.control-stats.quality-warn .control-stat-metric {
+  color: var(--dark-warn);
+}
+
+.control-stats.quality-bad .control-stat-metric {
+  color: var(--dark-danger);
+}
+
+.control-stats.quality-good .control-stat-metric svg,
+.control-stats.quality-warn .control-stat-metric svg,
+.control-stats.quality-bad .control-stat-metric svg {
+  color: currentColor;
+  opacity: 0.8;
+}
+
+.control-stat-alert {
+  border-color: transparent;
+  background: var(--dark-warn-bg);
+  color: var(--dark-warn);
+  font-weight: 600;
+}
+
+.control-stats.quality-bad .control-stat-alert {
+  background: rgba(248, 113, 113, 0.14);
+  color: var(--dark-danger);
+}
+
+/* 窄屏/侧栏展开时优先保住标题与操作按钮，指标让位。 */
+@media (max-width: 900px) {
+  .control-stat-metric {
+    display: none;
+  }
+}
+
 /* 顶栏图标按钮（返回、会话面板开关）：深色描边。 */
 .icon-button-dark {
   border-color: var(--dark-border);

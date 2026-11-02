@@ -70,19 +70,37 @@ node backend/dist/index.js      # 默认 0.0.0.0:8787，生产环境建议 HOST=
 
 ### 作为桌面应用运行（独立窗口）
 
-`app` 子命令用 Chrome/Chromium 的 app 模式打开页面，得到一个**没有地址栏、没有标签页**的独立窗口，任务栏上是它自己的图标，不会和日常浏览混在一起：
+`app` 子命令会拉起**独立的桌面窗口**：没有地址栏、没有标签页、没有系统标题栏，任务栏上是它自己的图标，默认最大化但**保留系统任务栏**（不是独占全屏）。
 
 ```bash
 ./scripts/uurc-web.sh app
 ```
 
-实现要点：
+窗口由 `desktop/` 下的 **Electron 壳**提供（`frame: false` 的无边框窗口）。为什么需要壳：在 KDE KWin（Deepin 25 的窗管）下，纯网页做不到"去掉标题栏但保留任务栏"——`_MOTIF_WM_HINTS` 写了不生效，最大化窗口也拒绝移动，实测三条路都走不通；而 HTML5 全屏能去掉标题栏，代价是把任务栏一起盖住。只有能自建 frameless 窗口的壳能同时满足这两个条件。
 
-- `--app=URL` 去掉浏览器 UI；`--class=uurc-web` 让 `WM_CLASS` 变成 `uurc-web`，桌面环境的任务栏/坞栏据此匹配到 `.desktop` 里的图标（配合 `StartupWMClass=uurc-web`）
-- `--user-data-dir=~/.local/share/uurc-web/app-profile` 用**独立配置目录**，与日常浏览的 Chrome 完全隔离：关掉浏览器不影响远控窗口，浏览器里的标签也不会和它抢窗口
-- `--start-maximized` 启动即最大化（想全屏可点窗口里的全屏按钮，或按 F11）
-- 已经开过窗口时再点一次，会用 `xdotool` 把已有窗口切到前台，不会开出一堆重复窗口
-- 找不到 Chrome/Chromium 时自动退回默认浏览器打开
+壳的职责只有窗口控制，不碰业务逻辑：
+
+- 页面仍由本地后端托管（`http://127.0.0.1:8787/`），可用 `UURC_DESKTOP_URL` 覆盖
+- 窗口按钮（最小化 / 最大化 / 关闭）通过 `preload.cjs` 的 `contextBridge` 暴露给页面，`nodeIntegration` 关闭、`sandbox` 开启
+- 页面顶栏与左侧栏是拖动把手（`-webkit-app-region: drag`），其中的可点元素显式改回 `no-drag`
+- 单实例锁：重复点图标只把已有窗口提到前面
+
+安装壳运行时（约 100 MB，不进 `package.json`，避免 CI 白下载）：
+
+```bash
+cd <项目目录>
+TMPDIR=$HOME/.cache/npm-tmp \
+ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ \
+npm i -D electron@33 --no-audit --no-fund
+```
+
+`TMPDIR` 有必要指定：部分发行版 `/tmp` 是几十 MB 的 tmpfs，解压 100 MB 二进制会直接失败。
+
+找不到 Electron 时脚本会**自动退回 Chrome app 模式**（`--app=URL --class=uurc-web`）：仍是独立窗口，但会保留系统标题栏。退回分支的要点：
+
+- `--class=uurc-web` 让 `WM_CLASS` 变成 `uurc-web`，桌面环境据此匹配 `.desktop` 里的图标（配合 `StartupWMClass=uurc-web`）
+- `--user-data-dir=~/.local/share/uurc-web/app-profile` 用**独立配置目录**，与日常浏览的 Chrome 完全隔离
+- 已开过窗口时用 `xdotool` 把已有窗口切到前台
 
 想让它出现在应用菜单里，把仓库里的 `packaging/uurc-web.desktop` 复制到 `~/.local/share/applications/`，并把 `Exec=` 和 `Icon=` 改成自己的路径即可。
 
@@ -130,13 +148,27 @@ Worker + Durable Object 一并承担静态托管、UU API 转发与信令网关�
 
 更细的排查思路见 `docs/remote-video-troubleshooting.zh-CN.md`。
 
-## 全屏交互
+## 连接后的实时指标
 
-进入全屏后，状态徽标、控制栏和底部提示会先亮 2.2 秒，然后自动淡出，把画面完整让给远控内容。
+顶栏「已连接」后面挂三枚胶囊，全部复用现有 `getStats` 采样，不额外开统计通道：
 
-- 唤出：鼠标顶到屏幕最上方，或移回工具栏当前所在位置附近（拖到哪儿都认）
-- 保持：鼠标停在工具栏上、拖动过程中都不计时隐藏
-- 退出：Esc。**仅查看**状态下 Esc 本地生效；已解锁输入时 Esc 会发给被控端（否则远端关不掉弹窗）
+| 胶囊 | 示例       | 来源                                             |
+| ---- | ---------- | ------------------------------------------------ |
+| 时长 | `01:24:07` | 首次连上时记录时间戳，`restart_ice` 重协商不归零 |
+| 延迟 | `32 ms`    | 连接质量面板的 RTT 采样                          |
+| 帧率 | `28 fps`   | `framesPerSecond` 或解码帧增量                   |
+
+采样未出数时显示 `—`；延迟/帧率随质量评级变色（正常绿、卡顿黄、断开红）。
+
+## 全屏与沉浸模式
+
+连接成功后顶栏、状态徽标、底部工具栏统一进入自动隐藏：先亮 2.2 秒，然后淡出，鼠标靠近再唤出。
+
+- 唤出：鼠标顶到屏幕最上方，或从远处移进顶栏 / 工具栏所在区域（边缘触发，停在原地不会反复唤醒）
+- 保持：鼠标压在悬浮层上、拖动过程中都不计时隐藏
+- 退出：Esc。**仅查看**状态下 Esc 退出全屏；已解锁输入时 Esc 会发给被控端（否则远端关不掉弹窗）
+
+顶栏是全屏时的浮层（`z-index` 高于铺满视口的画面容器），否则全屏下会被画面完全盖住、点不到返回和断开。
 
 ## 目录结构
 

@@ -1,0 +1,68 @@
+/* 仅 Electron 壳生效：preload 会给 <html> 加 .uurc-desktop（浏览器里没有这个类）。 */
+
+.desktop-window-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  margin-left: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.desktop-window-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  opacity: 0.65;
+  cursor: pointer;
+  transition:
+    background 0.14s ease,
+    opacity 0.14s ease;
+}
+
+.desktop-window-button:hover {
+  opacity: 1;
+  background: rgba(127, 127, 137, 0.18);
+}
+
+.desktop-window-button--close:hover {
+  opacity: 1;
+  background: rgba(248, 113, 113, 0.22);
+  color: #f87171;
+}
+
+/* 侧栏里的窗口按钮行：贴右侧，和系统标题栏按钮的位置习惯一致。 */
+.app-sidebar-window-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 2px 6px 6px;
+}
+
+/*
+ * 无边框窗口要靠页面自己提供拖拽区。
+ * 侧栏空白处和顶栏都是拖动把手；drag 会把子元素上的鼠标事件一起吞掉，
+ * 所以这些区域里的可点元素必须显式改回 no-drag。
+ */
+.uurc-desktop .control-topbar,
+.uurc-desktop .app-sidebar {
+  -webkit-app-region: drag;
+}
+
+.uurc-desktop .control-topbar button,
+.uurc-desktop .control-topbar a,
+.uurc-desktop .control-topbar details,
+.uurc-desktop .control-topbar summary,
+.uurc-desktop .control-topbar input,
+.uurc-desktop .app-sidebar button,
+.uurc-desktop .app-sidebar a,
+.uurc-desktop .app-sidebar input,
+.uurc-desktop .desktop-window-controls {
+  -webkit-app-region: no-drag;
+}

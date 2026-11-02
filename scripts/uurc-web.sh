@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # UU 远程网页主控端（uurc-web）本地服务管理
-# 默认只监听 127.0.0.1，账号凭证不离开本机。
+# 仅监听 127.0.0.1，账号凭证不离开本机。
 set -uo pipefail
 
-SELF_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
-APP_DIR="${UURC_DIR:-$(dirname "$SELF_DIR")}"
+APP_DIR="${UURC_DIR:-$HOME/.local/opt/uurc-web}"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/uurc-web"
 PID_FILE="$STATE_DIR/uurc-web.pid"
 LOG_FILE="$STATE_DIR/uurc-web.log"
@@ -16,7 +15,10 @@ URL="http://$HOST:$PORT/"
 
 find_node() {
   local candidate
-  for candidate in "${UURC_NODE:-}" "$(command -v node 2>/dev/null)"; do
+  for candidate in \
+    "${UURC_NODE:-}" \
+    "$HOME/.workbuddy/binaries/node/versions/22.22.2/bin/node" \
+    "$(command -v node 2>/dev/null)"; do
     [ -n "$candidate" ] && [ -x "$candidate" ] && { echo "$candidate"; return 0; }
   done
   return 1
@@ -42,10 +44,7 @@ start() {
     return 1
   fi
   local node; node=$(find_node) || { echo "找不到 node，请设置 UURC_NODE=/path/to/node"; return 1; }
-  [ -f "$APP_DIR/backend/dist/index.js" ] || {
-    echo "安装不完整：缺少 $APP_DIR/backend/dist/index.js，先执行 npm ci && npm run build"
-    return 1
-  }
+  [ -f "$APP_DIR/backend/dist/index.js" ] || { echo "安装不完整：缺少 $APP_DIR/backend/dist/index.js"; return 1; }
   mkdir -p "$STATE_DIR"
   cd "$APP_DIR/backend" || return 1
   HOST="$HOST" PORT="$PORT" UURC_BACKEND_LOG_PATH="$LOG_FILE" \
@@ -83,11 +82,6 @@ status() {
   fi
 }
 
-open_url() {
-  start >/dev/null
-  xdg-open "$URL" >/dev/null 2>&1 &
-}
-
 # 找一个支持 --app 的 Chromium 内核浏览器
 find_chrome() {
   local candidate
@@ -105,7 +99,16 @@ find_chrome() {
   return 1
 }
 
-# 独立窗口（Chrome app 模式）：无地址栏、无标签页、任务栏独立图标
+find_electron() {
+  local candidate
+  for candidate in "${UURC_ELECTRON:-}" "$APP_DIR/node_modules/electron/dist/electron"; do
+    [ -n "$candidate" ] && [ -x "$candidate" ] && { echo "$candidate"; return 0; }
+  done
+  return 1
+}
+
+# 独立窗口：优先用 Electron 壳（无边框、任务栏保留），
+# 壳缺失时退回 Chrome app 模式（有系统标题栏，但仍是独立窗口）
 app() {
   start >/dev/null 2>&1 || true
   if ! pid_alive && ! port_busy; then
@@ -113,6 +116,26 @@ app() {
     return 1
   fi
 
+  local electron
+  if ! electron=$(find_electron); then
+    echo "未找到 Electron 运行时，退回 Chrome 独立窗口（带系统标题栏）"
+    app_browser
+    return $?
+  fi
+
+  mkdir -p "$STATE_DIR"
+  # 已有窗口时主进程单实例锁会把旧窗口提到前台，这里不必自己去搜窗口。
+  # ELECTRON_RUN_AS_NODE / NODE_OPTIONS 会让 Electron 退化成纯 Node 进程，启动前清掉。
+  setsid env -u ELECTRON_RUN_AS_NODE -u NODE_OPTIONS \
+    UURC_DESKTOP_URL="$URL" \
+    "$electron" "$APP_DIR/desktop/main.cjs" \
+    >>"$APP_LOG" 2>&1 </dev/null &
+
+  echo "已打开桌面窗口（无边框、最大化）：$URL"
+}
+
+# 兜底：Chrome app 模式独立窗口
+app_browser() {
   local chrome
   if ! chrome=$(find_chrome); then
     echo "未找到 Chrome/Chromium，退回默认浏览器打开"
@@ -125,15 +148,12 @@ app() {
     local existing
     existing=$(xdotool search --class uurc-web 2>/dev/null | head -1)
     if [ -n "$existing" ]; then
-      xdotool windowactivate "$existing" 2>/dev/null && {
-        echo "窗口已在运行，已切到前台"
-        return 0
-      }
+      xdotool windowactivate "$existing" 2>/dev/null && { echo "窗口已在运行，已切到前台"; return 0; }
     fi
   fi
 
   mkdir -p "$APP_PROFILE" "$STATE_DIR"
-  # 独立 user-data-dir：与日常浏览的 Chrome 完全隔离，关掉浏览器不影响远控窗口
+  # 独立 user-data-dir：与日常浏览的 Chrome 完全隔离，关浏览器不影响远控窗口
   setsid "$chrome" \
     --app="$URL" \
     --class=uurc-web \
@@ -175,6 +195,6 @@ case "${1:-start}" in
   restart) stop; sleep 1; start ;;
   status)  status ;;
   app)     app ;;
-  open)    open_url ;;
+  open)    start >/dev/null; xdg-open "$URL" >/dev/null 2>&1 & ;;
   *)       echo "用法: $0 {start|stop|restart|status|app|open}" ;;
 esac

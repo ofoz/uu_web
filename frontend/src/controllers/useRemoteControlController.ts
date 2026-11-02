@@ -506,6 +506,7 @@ export function useRemoteControlController(context: RemoteControlContext) {
       browserRemoteState,
       busy,
       canDisconnectRemote,
+      connectionQuality,
       onReturnToDevices: () => void handleReturnToDevices(),
       onStopSignalGateway: () => void handleStopSignalGateway(),
       selectedDevice,

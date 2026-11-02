@@ -22,6 +22,7 @@ import { clientPointToRemoteMedia } from "../remote/remoteMediaGeometry.js";
 import { isDesktopRemoteScrollTarget, RemoteScrollDeltaAccumulator } from "../remote/remoteScrollInput.js";
 import { useRemoteCursorController } from "./useRemoteCursorController.js";
 import { useRemoteMediaGeometry } from "./useRemoteMediaGeometry.js";
+import { useRemoteWindowFullscreen } from "./useRemoteWindowFullscreen.js";
 
 const HOLD_MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta", "AltGraph"]);
 const REMOTE_CONTROL_LEFT_KEY = 113;
@@ -68,7 +69,7 @@ export function useRemoteInputController({
   onSessionStateChange,
 }: UseRemoteInputControllerOptions) {
   const [inputControlEnabled, setInputControlEnabled] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const { isFullscreen, toggle: handleToggleFullscreen } = useRemoteWindowFullscreen();
   const remoteStageRef = useRef<HTMLDivElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
   const controlChannelOpenedRef = useRef(false);
@@ -99,7 +100,7 @@ export function useRemoteInputController({
 
   const inputControlActive = inputControlEnabled && controlChannelState === "open";
 
-  // 全屏是页面内伪全屏，浏览器不会自己处理 Esc。仅在"仅查看"时用 Esc 退出全屏；
+  // 全屏只改布局，浏览器不会自己处理 Esc。仅在"仅查看"时用 Esc 退出全屏；
   // 已解锁输入时 Esc 仍要原样发给被控端（关弹窗、退全屏等），不能本地吞掉。
   useEffect(() => {
     if (!isFullscreen || inputControlActive) return;
@@ -107,11 +108,11 @@ export function useRemoteInputController({
       if (event.key !== "Escape" || event.isComposing) return;
       event.preventDefault();
       event.stopPropagation();
-      setIsFullscreen(false);
+      handleToggleFullscreen();
     }
     window.addEventListener("keydown", handleEscape, true);
     return () => window.removeEventListener("keydown", handleEscape, true);
-  }, [inputControlActive, isFullscreen]);
+  }, [handleToggleFullscreen, inputControlActive, isFullscreen]);
 
   const { geometryRef, refreshGeometry, subscribeGeometryChange } = useRemoteMediaGeometry({
     stageRef: remoteStageRef,
@@ -485,7 +486,7 @@ export function useRemoteInputController({
     enableInputControl,
     resetInputControl,
     handleRemoteShortcut,
-    handleToggleFullscreen: () => setIsFullscreen((current) => !current),
+    handleToggleFullscreen,
     handleToggleInputControl,
     handleRemoteStagePointerDown,
     handleRemoteStagePointerMove,

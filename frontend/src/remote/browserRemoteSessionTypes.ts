@@ -248,6 +248,8 @@ export interface BrowserRemoteSessionState {
   audioElement?: BrowserRemoteAudioElementSample;
   appControlId: string;
   clientId?: string;
+  // 会话首次进入 connected 的时间戳（毫秒），用于顶栏展示连接时长；重协商保留原值。
+  connectedAtMs?: number;
   connectionPath: StreamerConnectionPath;
   controlIceIdMatch?: boolean;
   controlResult?: StreamerSignalControlResult;
