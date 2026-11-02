@@ -78,8 +78,20 @@ export function createRemoteControlPresentation(input: RemoteControlPresentation
   );
   const roomJoinedForSelectedDevice =
     input.roomJoinContext?.deviceId === input.selectedDeviceId && Boolean(input.roomResponse?.roomConfigSummary);
-  const roomRequiresTakeover =
-    roomJoinedForSelectedDevice && input.roomJoinContext?.occupiedAtJoin === true && !input.roomJoinContext.forceJoin;
+  /*
+   * 被占用时服务端会直接拒绝加入（返回非 0 code，没有 roomConfigSummary），
+   * 于是 roomJoinedForSelectedDevice 为 false。若只按"已加入才需要接管"判断，
+   * 用户点了「普通加入」被拒后就卡在一条原始报错上，永远看不到接管入口。
+   * 所以把"服务端因占用而拒绝"也归入需要接管的状态。
+   */
+  const roomJoinRejectedByOccupancy =
+    !roomJoinedForSelectedDevice &&
+    input.roomJoinContext?.occupiedAtJoin === true &&
+    input.roomJoinContext.forceJoin === false &&
+    Boolean(roomJoinFailureMessage);
+  const roomRequiresTakeover = roomJoinedForSelectedDevice
+    ? input.roomJoinContext?.occupiedAtJoin === true && !input.roomJoinContext.forceJoin
+    : roomJoinRejectedByOccupancy;
   const signalGatewayMatchesRoom =
     signalGatewayState === "connected" &&
     input.signalGatewayContext?.deviceId === input.roomJoinContext?.deviceId &&
@@ -88,14 +100,12 @@ export function createRemoteControlPresentation(input: RemoteControlPresentation
   const roomReadyForBrowserRtc = roomJoinedForSelectedDevice && !roomRequiresTakeover && signalGatewayMatchesRoom;
   const browserRtcBlockedReason = selectedDeviceIsCurrentAuthDevice
     ? "不能控制当前设备。"
-    : roomJoinFailureMessage ||
-      (!roomJoinedForSelectedDevice
-        ? "请先加入房间"
-        : roomRequiresTakeover
-          ? "选择接管后重试"
-          : !signalGatewayMatchesRoom
-            ? "重新连接"
-            : "");
+    : roomRequiresTakeover
+      ? "设备被占用，点「接管并开始连接」"
+      : roomJoinFailureMessage ||
+        (!roomJoinedForSelectedDevice ? "请先加入房间" : !signalGatewayMatchesRoom ? "重新连接" : "");
+  // 需要接管时，服务端拒绝的原始报错已被"点接管"提示替代，不再重复报错。
+  const roomJoinFailureNotice = roomRequiresTakeover ? "" : roomJoinFailureMessage;
   const normalJoinLeftBeforeAnswer =
     input.roomJoinContext?.forceJoin === false &&
     signalReadiness.blocker === "controlled_left_before_answer" &&
@@ -260,6 +270,7 @@ export function createRemoteControlPresentation(input: RemoteControlPresentation
       : null,
     roomJoinedForSelectedDevice,
     roomJoinFailureMessage,
+    roomJoinFailureNotice,
     roomJoinModeDebugLabel: formatRoomJoinContext(input.remoteBootstrap?.joinContext),
     roomReadyForBrowserRtc,
     roomReleaseDetail: formatRoomReleaseDetail(input.signalGatewayStatus, input.roomJoinContext),

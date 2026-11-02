@@ -6,7 +6,7 @@ export interface RemoteControlWarningsProps {
   normalJoinTakeoverHint: string;
   occupiedBySelfClient: boolean;
   occupyingParticipantLabel: string;
-  roomJoinFailureMessage: string;
+  roomJoinFailureNotice: string;
   selectedDeviceOccupied: boolean;
   selfDeviceBlockedReason: string;
   signalGatewayErrorHint: string;
@@ -18,7 +18,7 @@ export function RemoteControlWarnings({
   normalJoinTakeoverHint,
   occupiedBySelfClient,
   occupyingParticipantLabel,
-  roomJoinFailureMessage,
+  roomJoinFailureNotice,
   selectedDeviceOccupied,
   selfDeviceBlockedReason,
   signalGatewayErrorHint,
@@ -42,10 +42,10 @@ export function RemoteControlWarnings({
           <span>该设备正被{occupyingParticipantLabel}占用。点击「接管并开始连接」可强制接管，对方将被断开。</span>
         </div>
       ) : null}
-      {roomJoinFailureMessage ? (
+      {roomJoinFailureNotice ? (
         <div className="occupancy-callout takeover">
           <TriangleAlert size={17} />
-          <span>{roomJoinFailureMessage}</span>
+          <span>{roomJoinFailureNotice}</span>
         </div>
       ) : null}
       {selfDeviceBlockedReason ? (
