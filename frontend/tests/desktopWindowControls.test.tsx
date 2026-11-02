@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DesktopWindowDock } from "../src/desktop/DesktopWindowDock.js";
 import { DesktopWindowControls } from "../src/desktop/DesktopWindowControls.js";
 import type { DesktopBridge } from "../src/desktop/desktopBridge.js";
+import App from "../src/App.js";
 
 function createBridge(overrides: Partial<DesktopBridge> = {}) {
   let listener: ((state: { maximized: boolean }) => void) | null = null;
@@ -75,6 +76,24 @@ describe("DesktopWindowControls", () => {
     expect(hasListener()).toBe(false);
   });
 
+  it("停靠区排在路由内容之后，页面的拖拽区才盖不住按钮", async () => {
+    const { bridge } = createBridge();
+    window.uurcDesktop = bridge;
+    const { container } = render(<App />);
+
+    const dock = await waitFor(() => {
+      const node = container.querySelector(".desktop-window-dock");
+      expect(node).not.toBeNull();
+      return node as HTMLElement;
+    });
+    /*
+     * frameless 窗口的 -webkit-app-region 按 DOM 顺序累积，后写的矩形覆盖先写的。
+     * 停靠区一旦排在页面之前，首页顶栏的 drag 区域会把它重新盖成可拖拽区，
+     * 点击就变成拖窗口——按钮看着在、点了没反应。这里把顺序钉死。
+     */
+    expect(container.lastElementChild).toBe(dock);
+    expect(await screen.findByLabelText("最小化")).toBeTruthy();
+  });
   it("停靠区只在桌面壳里出现，浏览访问时不渲染", async () => {
     const { bridge } = createBridge();
     const { container, unmount } = render(<DesktopWindowDock />);

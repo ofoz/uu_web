@@ -26,9 +26,15 @@ export function AppContent({ initialLandingLoggedIn }: AppProps) {
   return (
     <>
       <PageMetadata />
-      {/* 桌面壳的窗口按钮挂在根节点：首页、登录页、设备页、远控页都能用。 */}
-      <DesktopWindowDock />
       <RootRoutes initialLandingLoggedIn={initialLandingLoggedIn} />
+      {/*
+        桌面壳的窗口按钮挂在根节点：首页、登录页、设备页、远控页都能用。
+
+        必须排在路由内容**之后**：frameless 窗口的 `-webkit-app-region` 由 Blink
+        按 DOM 顺序收集矩形（后来的覆盖先前的），停靠区写在前面时会被首页顶栏、
+        侧栏这些 drag 区域覆盖回去，按钮就只剩好看、点不动（点击被当成拖窗口）。
+      */}
+      <DesktopWindowDock />
     </>
   );
 }
