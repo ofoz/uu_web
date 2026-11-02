@@ -89,10 +89,32 @@
 }
 
 .video-source-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 8px;
   color: var(--dark-text-dim);
   font-size: 11.5px;
   font-weight: 600;
+}
+
+/* 远端挂着但一直没画面的那几路：默认折叠，留一个可展开的小入口。 */
+.video-source-silent-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: var(--dark-text-dim);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.video-source-silent-toggle:hover,
+.video-source-silent-toggle:focus-visible {
+  color: var(--dark-text);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .video-source-panel .video-source-list {

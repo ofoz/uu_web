@@ -9,7 +9,10 @@ export function RemoteScreenPicker({
   remoteVideoSources,
 }: RemoteVideoSourcePanelProps) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
-  const active = remoteVideoSources.find((source) => source.id === primaryRemoteVideoId);
+  const liveSources = remoteVideoSources.filter((source) => !source.silent);
+  // 一路画面都没有时退回全部，至少还能让用户看到远端推了哪几路。
+  const selectableSources = liveSources.length > 0 ? liveSources : remoteVideoSources;
+  const active = selectableSources.find((source) => source.id === primaryRemoteVideoId);
 
   useEffect(() => {
     const details = detailsRef.current;
@@ -30,7 +33,7 @@ export function RemoteScreenPicker({
     };
   }, []);
 
-  if (remoteVideoSources.length <= 1) return null;
+  if (selectableSources.length <= 1) return null;
 
   return (
     <details className="screen-picker" ref={detailsRef}>
@@ -40,7 +43,7 @@ export function RemoteScreenPicker({
         <ChevronDown className="screen-picker-chevron" size={12} />
       </summary>
       <div className="screen-picker-panel" role="menu" aria-label="选择画面源">
-        {remoteVideoSources.map((source) => (
+        {selectableSources.map((source) => (
           <button
             type="button"
             key={source.id}

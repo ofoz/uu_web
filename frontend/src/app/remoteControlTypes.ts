@@ -65,6 +65,8 @@ export type RemoteVideoSourceInfo = {
   index: number;
   resolution: string;
   hasSignal: boolean;
+  /** 长期没有任何像素输出（多半是没启用的副屏/摄像头），默认在列表里折叠。 */
+  silent: boolean;
 };
 
 type RemoteConnectionQualityState = "pending" | "good" | "warn" | "bad";
