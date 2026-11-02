@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-UU Remote Web (`uurc-web`): a self-hosted browser controller for UU Remote devices (SMS login, credential import, device listing, WebRTC remote video/audio/input/clipboard). Two deployment targets share the `shared/` protocol code and must stay at signaling parity:
+UU Remote (`uurc-web`): a self-hosted browser controller for UU Remote devices (SMS login, credential import, device listing, WebRTC remote video/audio/input/clipboard). Two deployment targets share the `shared/` protocol code and must stay at signaling parity:
 
 - **Cloudflare Worker + Durable Object** (`cloudflare/`) — the recommended/primary target.
 - **Node/Express gateway** (`backend/`, shipped via Docker) — must keep signaling logic in sync with Cloudflare.

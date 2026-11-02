@@ -21,7 +21,7 @@ Do not include real SMS codes, exported login-state JSON, UU tokens, room tokens
 
 ## Trust model
 
-UU Remote Web stores login state in browser `localStorage` and sends authenticated UU API requests through the active deployment. The deployment operator can technically observe requests passing through that instance. Log in, enter SMS codes, and import credentials only on deployments you control or fully trust.
+UU Remote stores login state in browser `localStorage` and sends authenticated UU API requests through the active deployment. The deployment operator can technically observe requests passing through that instance. Log in, enter SMS codes, and import credentials only on deployments you control or fully trust.
 
 Each browser tab creates a random session capability that isolates signal state in the Node process or Cloudflare Durable Object. Access to the deployment still needs its own authentication. Put public self-hosted instances behind Cloudflare Access, an authenticated reverse proxy, or another access gateway.
 

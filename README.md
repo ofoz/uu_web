@@ -1,11 +1,11 @@
-# uu_web · UU 远程网页主控端
+# uu_web · UU 远程桌面主控端
 
 [![CI](https://github.com/ofoz/uu_web/actions/workflows/ci.yml/badge.svg)](https://github.com/ofoz/uu_web/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-在浏览器里操控你的 UU 远程设备。基于 [iola1999/uurc-web](https://github.com/iola1999/uurc-web)（MIT）二次开发，面向 Linux 桌面（Deepin / Debian 系）做了本地化部署与交互改进。
+连接并控制你的 UU 远程设备，桌面上双击图标即可启动。基于 [iola1999/uurc-web](https://github.com/iola1999/uurc-web)（MIT）二次开发，面向 Linux 桌面（Deepin / Debian 系）做了本地化部署与交互改进。
 
-UU 官方只提供 Windows / macOS 客户端。如果你主要在 Linux 上工作，又需要偶尔去操作另一台机器（家里 Windows 主机、公司电脑、放机房的笔记本），本项目把主控端搬到浏览器里：本机起一个 Node 服务，打开 `http://127.0.0.1:8787`，短信登录 UU 账号、选设备、连上去。视频、音频、键鼠、剪贴板走 WebRTC，账号凭证不出本机。
+UU 官方只提供 Windows / macOS 客户端。如果你主要在 Linux 上工作，又需要偶尔去操作另一台机器（家里 Windows 主机、公司电脑、放机房的笔记本），本项目把主控端做成自托管的本地服务：本机起一个 Node 服务，打开 `http://127.0.0.1:8787`，短信登录 UU 账号、选设备、连上去。视频、音频、键鼠、剪贴板走 WebRTC，账号凭证不出本机。
 
 ## 它是什么，不是什么
 

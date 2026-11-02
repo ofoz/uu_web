@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router";
 
-const SITE_NAME = "UU Remote Web";
+const SITE_NAME = "UU Remote";
 const SITE_URL = "https://uurc.678234.xyz";
 const DEFAULT_DESCRIPTION =
-  "UU Remote Web 是开源、自托管的非官方 UU 远程桌面网页版（Web 版）主控端，支持短信登录、设备列表、远控伙伴和浏览器远程控制。";
+  "UU Remote 是开源、自托管的非官方 UU 远程桌面主控端，支持短信登录、设备列表、远控伙伴和远程控制。";
 const DEFAULT_KEYWORDS =
-  "UU 远程桌面网页版, UU 远程桌面 Web 版, UU 远程网页版, UU Remote Web, 网页远程桌面, 浏览器远程控制";
+  "UU 远程桌面, UU 远程, UU Remote, 远程桌面控制, 远程协助, 自托管远程控制";
 
 interface Metadata {
   title: string;
@@ -53,7 +53,7 @@ function getPageMetadata(pathname: string): Metadata {
   }
 
   if (pathname === "/login") {
-    return privateMetadata("登录", "/login", "登录 UU Remote Web，使用手机号验证码或导入已有账号凭证。");
+    return privateMetadata("登录", "/login", "登录 UU Remote，使用手机号验证码或导入已有账号凭证。");
   }
   if (pathname === "/devices") return privateMetadata("我的设备", "/devices");
   if (pathname === "/partner") return privateMetadata("远控伙伴", "/partner");

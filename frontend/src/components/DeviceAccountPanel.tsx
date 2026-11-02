@@ -77,7 +77,7 @@ export function DeviceAccountPanel({
         <div className="status-list compact">
           <StatusRow label="用户" value={authStatus?.userId ?? "-"} />
           <StatusRow label="客户端" value={authStatus?.clientId ?? "-"} />
-          <StatusRow label="网页设备" value={authStatus?.deviceId ?? "-"} />
+          <StatusRow label="主控设备" value={authStatus?.deviceId ?? "-"} />
         </div>
       </AnimatedDisclosure>
 

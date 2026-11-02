@@ -127,7 +127,7 @@ export function useRemoteControlController(context: RemoteControlContext) {
   );
   const selectedParticipants = selectedDevice?.participantsInfo ?? [];
   const selectedDeviceOccupied = selectedParticipants.length > 0;
-  // 用 participant.clientId 与当前网页控制端的 clientId 比对，区分“占用者是不是自己上一个会话”。
+  // 用 participant.clientId 与当前主控端的 clientId 比对，区分“占用者是不是自己上一个会话”。
   // 仅当占用者全部是自己时才自动接管；任一占用者是他人则保留显式接管步骤（避免误踢真实控制端）。
   const currentClientId = authStatus?.clientId ?? "";
   const occupiedBySelfClient =

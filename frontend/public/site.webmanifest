@@ -1,7 +1,7 @@
 {
-  "name": "UU Remote Web",
+  "name": "UU Remote",
   "short_name": "UU Remote",
-  "description": "非官方开源 UU 远程桌面网页版（Web 版）主控端",
+  "description": "非官方开源 UU 远程桌面主控端",
   "lang": "zh-CN",
   "start_url": "/",
   "scope": "/",

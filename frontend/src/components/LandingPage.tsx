@@ -4,7 +4,7 @@ import { Link } from "react-router";
 import { preloadProductRoutes } from "../routeLoaders.js";
 import { BrandLogo } from "./BrandLogo.js";
 
-const GITHUB_URL = "https://github.com/iola1999/uurc-web";
+const GITHUB_URL = "https://github.com/ofoz/uu_web";
 const V2EX_URL = "https://www.v2ex.com/t/1225978";
 
 function BrowserBar({ address, dark = false }: { address?: string; dark?: boolean }) {
@@ -27,11 +27,11 @@ export function LandingPage({ loggedIn }: { loggedIn: boolean }) {
     <main className="landing-page">
       <header className="landing-header">
         <div className="landing-header-inner">
-          <a className="landing-brand" href="/" aria-label="UU Remote Web 首页">
+          <a className="landing-brand" href="/" aria-label="UU Remote 首页">
             <span className="landing-brand-mark" aria-hidden="true">
               <BrandLogo size={30} />
             </span>
-            <span>UU Remote Web</span>
+            <span>UU Remote</span>
           </a>
           <nav className="landing-nav" aria-label="首页导航">
             <a className="landing-nav-github" href={GITHUB_URL} target="_blank" rel="noreferrer">
@@ -55,12 +55,11 @@ export function LandingPage({ loggedIn }: { loggedIn: boolean }) {
         <div className="landing-hero-content">
           <p className="landing-eyebrow">
             <span aria-hidden="true" />
-            UU Remote Web · 非官方开源项目
+            UU Remote · 非官方开源项目
           </p>
-          <h1 id="landing-title">UU 远程桌面网页版</h1>
+          <h1 id="landing-title">UU 远程桌面</h1>
           <p className="landing-hero-description">
-            打开浏览器，连接并控制你的 UU 远程设备 —
-            无需安装主控客户端。支持短信登录、设备列表和网页远程控制，可自托管部署。
+            连接并控制你的 UU 远程设备，无需安装官方主控客户端；支持短信登录、设备列表与实时远控。
           </p>
           <div className="landing-actions">
             <Link
@@ -82,7 +81,7 @@ export function LandingPage({ loggedIn }: { loggedIn: boolean }) {
 
           <figure className="landing-hero-window">
             <BrowserBar address="uurc.678234.xyz" />
-            <img src="/product/device-list.png" alt="UU Remote Web 设备列表界面" width="1440" height="821" />
+            <img src="/product/device-list.png" alt="UU Remote 设备列表界面" width="1440" height="821" />
           </figure>
         </div>
       </section>
@@ -92,7 +91,7 @@ export function LandingPage({ loggedIn }: { loggedIn: boolean }) {
           <div className="landing-section-heading">
             <p className="landing-section-index">使用流程</p>
             <h2 id="workflow-title">从登录到远控</h2>
-            <p>登录后选择在线设备，连接完成即可在网页中查看画面和发送输入。</p>
+            <p>登录后选择在线设备，连接完成即可查看画面和发送输入。</p>
           </div>
 
           <div className="landing-steps">
@@ -107,7 +106,7 @@ export function LandingPage({ loggedIn }: { loggedIn: boolean }) {
               <div className="landing-login-stage">
                 <figure className="landing-media landing-media-login">
                   <BrowserBar />
-                  <img src="/product/login.png" alt="UU Remote Web 手机号验证码登录页面" width="960" height="680" />
+                  <img src="/product/login.png" alt="UU Remote 手机号验证码登录页面" width="960" height="680" />
                 </figure>
               </div>
             </article>
@@ -122,7 +121,7 @@ export function LandingPage({ loggedIn }: { loggedIn: boolean }) {
               </div>
               <figure className="landing-media">
                 <BrowserBar />
-                <img src="/product/device-list.png" alt="UU Remote Web 设备列表页面" width="1440" height="821" />
+                <img src="/product/device-list.png" alt="UU Remote 设备列表页面" width="1440" height="821" />
               </figure>
             </article>
 
@@ -136,7 +135,7 @@ export function LandingPage({ loggedIn }: { loggedIn: boolean }) {
               </div>
               <figure className="landing-media landing-media-dark">
                 <BrowserBar dark />
-                <img src="/product/remote-session.png" alt="UU Remote Web 远程控制会话页面" width="1440" height="861" />
+                <img src="/product/remote-session.png" alt="UU Remote 远程控制会话页面" width="1440" height="861" />
               </figure>
             </article>
           </div>
@@ -145,7 +144,7 @@ export function LandingPage({ loggedIn }: { loggedIn: boolean }) {
 
       <section className="landing-final" aria-labelledby="landing-final-title">
         <div className="landing-final-content">
-          <p className="landing-section-index">UU Remote Web</p>
+          <p className="landing-section-index">UU Remote</p>
           <h2 id="landing-final-title">准备开始？</h2>
           <p>短信登录，也支持导入已有账号凭证。</p>
           <div className="landing-final-actions">
@@ -169,7 +168,7 @@ export function LandingPage({ loggedIn }: { loggedIn: boolean }) {
         <footer className="landing-footer">
           <div className="landing-footer-inner">
             <p>
-              UU Remote Web 是非官方开源项目，与网易及 UU 远程没有关联。请确认你信任当前部署，仅用于交流学习和个人使用。
+              UU Remote 是非官方开源项目，与网易及 UU 远程没有关联。请确认你信任当前部署，仅用于交流学习和个人使用。
             </p>
             <div>
               <a href={GITHUB_URL} target="_blank" rel="noreferrer">

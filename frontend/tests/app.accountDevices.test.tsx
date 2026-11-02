@@ -23,7 +23,7 @@ describe("App account and devices", () => {
 
     render(<App />);
 
-    expect(await screen.findByRole("heading", { level: 1, name: "UU 远程桌面网页版" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "UU 远程桌面" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /进入控制台/ })).not.toHaveLength(0);
     for (const link of screen.getAllByRole("link", { name: /进入控制台/ })) {
       expect(link).toHaveAttribute("href", "/devices");
@@ -36,9 +36,9 @@ describe("App account and devices", () => {
     render(<App />);
 
     await screen.findByRole("heading", { name: "我的设备" });
-    await user.click(screen.getByRole("link", { name: "返回 UU Remote Web 首页" }));
+    await user.click(screen.getByRole("link", { name: "返回 UU Remote 首页" }));
 
-    expect(await screen.findByRole("heading", { level: 1, name: "UU 远程桌面网页版" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "UU 远程桌面" })).toBeInTheDocument();
     expect(window.location.pathname).toBe("/");
   });
 

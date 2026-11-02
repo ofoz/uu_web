@@ -25,15 +25,15 @@ describe("LandingPage", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("heading", { level: 1, name: "UU 远程桌面网页版" })).toBeInTheDocument();
-    expect(screen.getByText(/无需安装主控客户端/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "UU 远程桌面" })).toBeInTheDocument();
+    expect(screen.getByText(/无需安装官方主控客户端/)).toBeInTheDocument();
     for (const link of screen.getAllByRole("link", { name: /进入控制台/ })) {
       expect(link).toHaveAttribute("href", "/devices");
     }
-    expect(screen.getByRole("img", { name: "UU Remote Web 手机号验证码登录页面" })).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "UU Remote Web 设备列表界面" })).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "UU Remote Web 设备列表页面" })).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "UU Remote Web 远程控制会话页面" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "UU Remote 手机号验证码登录页面" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "UU Remote 设备列表界面" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "UU Remote 设备列表页面" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "UU Remote 远程控制会话页面" })).toBeInTheDocument();
     expect(container.querySelector(".landing-signal-field")).not.toBeInTheDocument();
   });
 

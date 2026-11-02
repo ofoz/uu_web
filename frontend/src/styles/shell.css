@@ -55,15 +55,6 @@
   transition: color 160ms ease;
 }
 
-.app-sidebar-badge {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--gray-400);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 1px 4px;
-}
-
 .app-sidebar-search {
   display: flex;
   align-items: center;

@@ -1,6 +1,6 @@
 # Code of Conduct
 
-UU Remote Web accepts collaboration in English and Chinese. Keep discussions practical, respectful, and focused on the project.
+UU Remote accepts collaboration in English and Chinese. Keep discussions practical, respectful, and focused on the project.
 
 ## Expected behavior
 
@@ -23,7 +23,7 @@ Maintainers may edit, hide, or remove content and may restrict contributors who 
 
 # 社区行为准则
 
-UU Remote Web 接受中文和英文交流。讨论应保持务实、尊重，并围绕项目本身展开。
+UU Remote 接受中文和英文交流。讨论应保持务实、尊重，并围绕项目本身展开。
 
 ## 期望的行为
 

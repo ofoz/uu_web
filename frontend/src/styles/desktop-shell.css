@@ -62,11 +62,23 @@
 
 /*
  * 右上角让出窗口按钮的宽度（3×28 + 间隙 + 内边距 ≈ 100px），
- * 否则普通页的标题栏和远控页的「会话面板/断开」会被压在按钮下面。
+ * 否则普通页的标题栏、远控页的「会话面板/断开」、首页的「进入控制台」
+ * 都会被压在按钮下面。
  */
 .uurc-desktop .shell-page-topbar,
-.uurc-desktop .control-topbar {
+.uurc-desktop .control-topbar,
+.uurc-desktop .landing-header-inner {
   padding-right: 104px;
+}
+
+/* 首页顶栏同样当拖动把手用，里面的链接恢复可点。 */
+.uurc-desktop .landing-header {
+  -webkit-app-region: drag;
+}
+
+.uurc-desktop .landing-header a,
+.uurc-desktop .landing-header button {
+  -webkit-app-region: no-drag;
 }
 
 /*

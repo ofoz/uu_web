@@ -3,6 +3,7 @@ import { BrowserRouter, useLocation } from "react-router";
 
 import { LandingPage } from "./components/LandingPage.js";
 import { PageMetadata } from "./components/PageMetadata.js";
+import { DesktopWindowDock } from "./desktop/DesktopWindowDock.js";
 import { loadProductRoutes } from "./routeLoaders.js";
 import { getStoredAuthStatus } from "./uu/loginStateStore.js";
 import "./styles/index.css";
@@ -25,6 +26,8 @@ export function AppContent({ initialLandingLoggedIn }: AppProps) {
   return (
     <>
       <PageMetadata />
+      {/* 桌面壳的窗口按钮挂在根节点：首页、登录页、设备页、远控页都能用。 */}
+      <DesktopWindowDock />
       <RootRoutes initialLandingLoggedIn={initialLandingLoggedIn} />
     </>
   );

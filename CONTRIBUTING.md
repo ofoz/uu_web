@@ -76,6 +76,6 @@ Common types are `feat`, `fix`, `refactor`, `test`, `docs`, `style`, `chore`, `c
 
 ## Sensitive data
 
-UU Remote Web handles login state, authenticated UU API requests, room configuration, and remote-control signaling. Reports and test fixtures must use synthetic values.
+UU Remote handles login state, authenticated UU API requests, room configuration, and remote-control signaling. Reports and test fixtures must use synthetic values.
 
 Remove SMS codes, exported login-state JSON, account tokens, room tokens, complete device IDs, private IP addresses, and private page contents before sharing logs or screenshots. See [SECURITY.md](SECURITY.md) for the trust model and private reporting process.

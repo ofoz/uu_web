@@ -42,7 +42,7 @@ export function useProductController() {
   const loggedIn = Boolean(accountState.authStatus?.hasState);
   const canSubmitMobile = accountState.mobile.trim().length > 0 && busy === null && accountState.smsCountdown === 0;
   const canLogin = accountState.mobile.trim().length > 0 && accountState.smsCode.trim().length > 0 && busy === null;
-  const identitySourceLabel = accountState.authStatus?.deviceId ? "网页控制端" : "待创建设备";
+  const identitySourceLabel = accountState.authStatus?.deviceId ? "主控端" : "待创建设备";
   const identityDeviceLabel = accountState.authStatus?.deviceId ?? "-";
 
   useEffect(() => {

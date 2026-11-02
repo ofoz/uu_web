@@ -6,8 +6,6 @@ import { Link, NavLink, useLocation, useOutlet } from "react-router";
 import type { UuDeviceGroups } from "@uurc/shared/devices";
 
 import { useCommandPaletteController } from "../controllers/useCommandPaletteController.js";
-import { DesktopWindowControls } from "../desktop/DesktopWindowControls.js";
-import { useDesktopBridge } from "../desktop/useDesktopBridge.js";
 import { tabIndicatorTransition } from "../motion/presets.js";
 import { CommandPalette } from "./CommandPalette.js";
 
@@ -68,7 +66,6 @@ export function AppShell({
   onOpenDevice: (deviceId: string) => void;
   onLoadDevices: () => void;
 }) {
-  const desktopBridge = useDesktopBridge();
   const palette = useCommandPaletteController({ devices, onOpenDevice, onLoadDevices });
   const deviceCount = devices.desktopDevices.length + devices.mobileDevices.length + devices.tvDevices.length;
   const location = useLocation();
@@ -77,12 +74,11 @@ export function AppShell({
   return (
     <div className="app-shell">
       <aside className="app-sidebar">
-        <Link className="app-sidebar-brand" to="/" aria-label="返回 UU Remote Web 首页">
+        <Link className="app-sidebar-brand" to="/" aria-label="返回 UU Remote 首页">
           <span className="app-sidebar-logo" aria-hidden="true">
             <Monitor size={13} />
           </span>
           <span className="app-sidebar-wordmark">UU Remote</span>
-          <span className="app-sidebar-badge">WEB</span>
         </Link>
 
         <button type="button" className="app-sidebar-search" onClick={() => palette.setOpen(true)}>
@@ -104,12 +100,12 @@ export function AppShell({
         <div className="app-sidebar-identity">
           <span className="app-sidebar-identity-dot" aria-hidden="true" />
           <div className="app-sidebar-identity-text">
-            <div className="app-sidebar-identity-label">网页控制端</div>
+            <div className="app-sidebar-identity-label">主控端</div>
             <div className="app-sidebar-identity-id">{identityDeviceLabel}</div>
           </div>
           <a
             className="app-sidebar-repo-link"
-            href="https://github.com/iola1999/uurc-web"
+            href="https://github.com/ofoz/uu_web"
             target="_blank"
             rel="noreferrer"
             aria-label="在 GitHub 查看源码"
@@ -135,16 +131,6 @@ export function AppShell({
       </div>
 
       <CommandPalette {...palette} />
-
-      {/*
-        无边框窗口的三个按钮固定贴在视口右上角——和系统标题栏按钮同一位置，
-        不随侧栏宽度、页面滚动或远控页顶栏的显隐而漂移。
-      */}
-      {desktopBridge ? (
-        <div className="desktop-window-dock">
-          <DesktopWindowControls bridge={desktopBridge} />
-        </div>
-      ) : null}
     </div>
   );
 }

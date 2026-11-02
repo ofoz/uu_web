@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { DesktopWindowDock } from "../src/desktop/DesktopWindowDock.js";
 import { DesktopWindowControls } from "../src/desktop/DesktopWindowControls.js";
 import type { DesktopBridge } from "../src/desktop/desktopBridge.js";
 
@@ -32,7 +33,9 @@ function createBridge(overrides: Partial<DesktopBridge> = {}) {
 
 describe("DesktopWindowControls", () => {
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
+    delete window.uurcDesktop;
   });
 
   it("把三个窗口按钮接到壳桥接上", async () => {
@@ -70,5 +73,23 @@ describe("DesktopWindowControls", () => {
     await waitFor(() => expect(hasListener()).toBe(true));
     unmount();
     expect(hasListener()).toBe(false);
+  });
+
+  it("停靠区只在桌面壳里出现，浏览访问时不渲染", async () => {
+    const { bridge } = createBridge();
+    const { container, unmount } = render(<DesktopWindowDock />);
+    // 浏览器里没有 window.uurcDesktop，dock 应该直接不渲染。
+    expect(container.querySelector(".desktop-window-dock")).toBeNull();
+
+    window.uurcDesktop = bridge;
+    try {
+      const mounted = render(<DesktopWindowDock />);
+      // 桥接在 effect 里读取，首帧为 null，挂载后才出现。
+      await waitFor(() => expect(mounted.container.querySelector(".desktop-window-dock")).not.toBeNull());
+      expect(await screen.findByLabelText("最小化")).toBeTruthy();
+    } finally {
+      delete window.uurcDesktop;
+      unmount();
+    }
   });
 });

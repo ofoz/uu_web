@@ -2,7 +2,7 @@
 
 [English](CONTRIBUTING.md)
 
-欢迎参与 UU Remote Web。提交内容应围绕一个明确问题展开，Issue、测试和代码提交中都不要包含真实的 UU 账号或会话数据。
+欢迎参与 UU Remote。提交内容应围绕一个明确问题展开，Issue、测试和代码提交中都不要包含真实的 UU 账号或会话数据。
 
 ## 提交 Issue 前
 
@@ -76,6 +76,6 @@ docs(deploy): explain Cloudflare connection routing
 
 ## 敏感信息
 
-UU Remote Web 会处理登录状态、带鉴权的 UU API 请求、房间配置和远控信令。Issue 和测试夹具请使用虚构数据。
+UU Remote 会处理登录状态、带鉴权的 UU API 请求、房间配置和远控信令。Issue 和测试夹具请使用虚构数据。
 
 分享日志或截图前，请移除短信验证码、账号凭证 JSON、账号 Token、房间 Token、完整设备 ID、私网地址和私有页面内容。信任边界和私下报告方式见 [SECURITY.zh-CN.md](SECURITY.zh-CN.md)。
