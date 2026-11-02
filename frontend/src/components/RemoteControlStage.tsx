@@ -123,10 +123,7 @@ export function RemoteControlStage({
               <span>这一路当前没有画面输出，可在右侧「画面源」切换到其他画面。</span>
             </div>
           ) : null}
-          <div
-            className={`stage-badge${chromeHidden ? " stage-badge--idle-hidden" : ""}`}
-            aria-hidden={chromeHidden}
-          >
+          <div className={`stage-badge${chromeHidden ? " stage-badge--idle-hidden" : ""}`} aria-hidden={chromeHidden}>
             {browserStageLabel} · {remoteVideoCount} 路视频 · {videoFlowLabel} · 输入 {inputControlLabel}
           </div>
           <RemoteCursorOverlay />

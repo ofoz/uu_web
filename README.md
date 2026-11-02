@@ -6,11 +6,11 @@ UU 官方只提供 Windows / macOS 客户端。如果你主要在 Linux 上工�
 
 ## 它是什么，不是什么
 
-| | **uu_web**（本项目） | uuway |
-|---|---|---|
-| 角色 | **主控端**：由本机去控制别人 | **被控端**：让别的机器来控制本机 |
-| 形态 | 本地 Node 服务 + 浏览器页面 | UU 官方 Windows host 的 Linux 封装（Wine / Xvfb / Wayland 采集） |
-| 对你的意义 | Linux 当"操作台" | Linux 当"被操作的那台" |
+|            | **uu_web**（本项目）         | uuway                                                            |
+| ---------- | ---------------------------- | ---------------------------------------------------------------- |
+| 角色       | **主控端**：由本机去控制别人 | **被控端**：让别的机器来控制本机                                 |
+| 形态       | 本地 Node 服务 + 浏览器页面  | UU 官方 Windows host 的 Linux 封装（Wine / Xvfb / Wayland 采集） |
+| 对你的意义 | Linux 当"操作台"             | Linux 当"被操作的那台"                                           |
 
 两者只共用同一个 UU 账号和 UU 云服务，代码、进程、端口互不相干。本仓库只做前者。
 
@@ -25,16 +25,16 @@ UU 官方只提供 Windows / macOS 客户端。如果你主要在 Linux 上工�
 
 ## 相对上游的改动
 
-| 改动 | 位置 | 说明 |
-|---|---|---|
+| 改动                           | 位置                                                                                                      | 说明                                                                                                                                                                       |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 全屏时状态徽标与控制栏自动隐藏 | `frontend/src/components/useFullscreenChromeAutoHide.ts`、`RemoteControlPage.tsx`、`RemoteCommandBar.tsx` | 进全屏先显示 2.2s 再淡出；鼠标触顶或移回工具栏附近唤出；画面中央操作不唤出（远控时鼠标一直在动，否则等于永不隐藏）。Esc 只在"仅查看"态退全屏，已解锁输入时仍原样发给被控端 |
-| 直连优化：补双栈 STUN | `shared/src/streamer/signalControl.ts` | 上游只用 UU 下发的 ICE 服务器，缺少 IPv6 STUN，导致 IPv6 可用时也拿不到 srflx 候选、只能走中转。现追加 Google / 小米公共 STUN，`?stun=off` 可关闭，`forceRelay` 时跳过 |
-| 诊断里标注候选地址族 | `frontend/src/remote/remoteControlPresentation.ts` | 候选链路显示为 `srflx v6` / `host v4`，便于判断到底走的是哪条路 |
-| 品牌标识 | `frontend/public/brand/`、`favicon.svg`、`BrandLogo.tsx`、`site.webmanifest` | 蓝色渐变圆角底 + 深色远控画面 + 白色指针；≤32px 另用简化稿（去支架、放大屏幕与指针） |
-| 修复状态徽标吞点击 | `frontend/src/styles/stage.css` | 补 `pointer-events: none` |
-| 修复工具栏拖动后位置错乱 | `frontend/src/styles/control-command-bar.css` | 隐藏态去掉 `transform`，避免与 fixed 坐标叠加二次平移 |
-| 本地构建配置 | `frontend/vite.local.config.ts` | 关闭 `publicDir` 自动复制，静态资源用 `cp` 手动拷贝，绕开部分环境下 Node `copyFile` 被拦截的问题 |
-| 服务管理脚本 | `scripts/uurc-web.sh` | `start/stop/restart/status/open`，只监听 `127.0.0.1` |
+| 直连优化：补双栈 STUN          | `shared/src/streamer/signalControl.ts`                                                                    | 上游只用 UU 下发的 ICE 服务器，缺少 IPv6 STUN，导致 IPv6 可用时也拿不到 srflx 候选、只能走中转。现追加 Google / 小米公共 STUN，`?stun=off` 可关闭，`forceRelay` 时跳过     |
+| 诊断里标注候选地址族           | `frontend/src/remote/remoteControlPresentation.ts`                                                        | 候选链路显示为 `srflx v6` / `host v4`，便于判断到底走的是哪条路                                                                                                            |
+| 品牌标识                       | `frontend/public/brand/`、`favicon.svg`、`BrandLogo.tsx`、`site.webmanifest`                              | 蓝色渐变圆角底 + 深色远控画面 + 白色指针；≤32px 另用简化稿（去支架、放大屏幕与指针）                                                                                       |
+| 修复状态徽标吞点击             | `frontend/src/styles/stage.css`                                                                           | 补 `pointer-events: none`                                                                                                                                                  |
+| 修复工具栏拖动后位置错乱       | `frontend/src/styles/control-command-bar.css`                                                             | 隐藏态去掉 `transform`，避免与 fixed 坐标叠加二次平移                                                                                                                      |
+| 本地构建配置                   | `frontend/vite.local.config.ts`                                                                           | 关闭 `publicDir` 自动复制，静态资源用 `cp` 手动拷贝，绕开部分环境下 Node `copyFile` 被拦截的问题                                                                           |
+| 服务管理脚本                   | `scripts/uurc-web.sh`                                                                                     | `start/stop/restart/status/open`，只监听 `127.0.0.1`                                                                                                                       |
 
 ## 快速开始（Linux 本地）
 
@@ -66,12 +66,12 @@ node backend/dist/index.js      # 默认 0.0.0.0:8787，生产环境建议 HOST=
 
 ### 环境变量
 
-| 变量 | 默认 | 说明 |
-|---|---|---|
-| `HOST` | `0.0.0.0` | 监听地址。只给本机用就设 `127.0.0.1` |
-| `PORT` | `8787` | 监听端口 |
-| `ENABLE_DIAGNOSTICS` | `true` | 设为 `false` 关闭诊断路由 |
-| `ENABLE_WISP` | `false` | 可选 WASM curl 传输，仅测试用 |
+| 变量                    | 默认                        | 说明                                                  |
+| ----------------------- | --------------------------- | ----------------------------------------------------- |
+| `HOST`                  | `0.0.0.0`                   | 监听地址。只给本机用就设 `127.0.0.1`                  |
+| `PORT`                  | `8787`                      | 监听端口                                              |
+| `ENABLE_DIAGNOSTICS`    | `true`                      | 设为 `false` 关闭诊断路由                             |
+| `ENABLE_WISP`           | `false`                     | 可选 WASM curl 传输，仅测试用                         |
 | `UURC_BACKEND_LOG_PATH` | `/tmp/uurc-web-backend.log` | 后端日志路径（脚本会指到 `~/.local/state/uurc-web/`） |
 
 ### Docker
