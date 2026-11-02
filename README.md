@@ -80,6 +80,7 @@ node backend/dist/index.js      # 默认 0.0.0.0:8787，生产环境建议 HOST=
 
 - `--app=URL` 去掉浏览器 UI；`--class=uurc-web` 让 `WM_CLASS` 变成 `uurc-web`，桌面环境的任务栏/坞栏据此匹配到 `.desktop` 里的图标（配合 `StartupWMClass=uurc-web`）
 - `--user-data-dir=~/.local/share/uurc-web/app-profile` 用**独立配置目录**，与日常浏览的 Chrome 完全隔离：关掉浏览器不影响远控窗口，浏览器里的标签也不会和它抢窗口
+- `--start-fullscreen` 启动即全屏铺满屏幕（按 F11 可切回窗口模式）
 - 已经开过窗口时再点一次，会用 `xdotool` 把已有窗口切到前台，不会开出一堆重复窗口
 - 找不到 Chrome/Chromium 时自动退回默认浏览器打开
 

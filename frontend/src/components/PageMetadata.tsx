@@ -44,7 +44,7 @@ export function PageMetadata() {
 function getPageMetadata(pathname: string): Metadata {
   if (pathname === "/") {
     return {
-      title: `UU 远程桌面网页版（Web 版）- ${SITE_NAME}`,
+      title: `UU 远程 - ${SITE_NAME}`,
       description: DEFAULT_DESCRIPTION,
       canonicalPath: "/",
       robots: "index, follow, max-image-preview:large",

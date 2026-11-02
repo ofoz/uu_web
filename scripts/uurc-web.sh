@@ -138,6 +138,7 @@ app() {
     --app="$URL" \
     --class=uurc-web \
     --user-data-dir="$APP_PROFILE" \
+    --start-fullscreen \
     --window-size=1440,900 \
     --no-first-run \
     --no-default-browser-check \
