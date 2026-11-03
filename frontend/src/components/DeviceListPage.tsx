@@ -5,6 +5,7 @@ import type { UuDeviceGroups } from "@uurc/shared/devices";
 
 import { preloadRemoteControlRoute } from "../routeLoaders.js";
 import { DeviceList } from "./DeviceControls.js";
+import { RemoteConnectionTabs } from "./RemoteConnectionTabs.js";
 
 export function DeviceListPage({
   authStatus,
@@ -18,6 +19,8 @@ export function DeviceListPage({
   onOpenDevice,
   onAssistanceConnectIdChange,
   onStartRemoteAssistance,
+  onCloseRemoteConnection,
+  activeRemoteDeviceId,
 }: {
   authStatus: AuthStatus | null;
   devices: UuDeviceGroups;
@@ -30,6 +33,10 @@ export function DeviceListPage({
   onOpenDevice: (deviceId: string) => void;
   onAssistanceConnectIdChange: (value: string) => void;
   onStartRemoteAssistance: () => void;
+  /** 关闭（真正断开）某条在途连接，仅由页签的 × 触发。 */
+  onCloseRemoteConnection: (deviceId: string) => void;
+  /** 当前正在看的远控页对应的设备；在列表页恒为空。 */
+  activeRemoteDeviceId?: string;
 }) {
   const hasDevices = devices.desktopDevices.length + devices.mobileDevices.length + devices.tvDevices.length > 0;
   const devicesLoading = !error && (busy === "devices" || !devicesLoaded);
@@ -77,6 +84,12 @@ export function DeviceListPage({
 
       <div className="shell-page-body">
         <div className="shell-page-body-wide">
+          <RemoteConnectionTabs
+            activeDeviceId={activeRemoteDeviceId}
+            onClose={onCloseRemoteConnection}
+            /* 点页签＝切到那台设备的远控视图，正是"打开设备"这一动作。 */
+            onSwitch={onOpenDevice}
+          />
           {error ? (
             <section className="error-strip" role="alert" aria-live="assertive">
               <TerminalSquare size={18} />

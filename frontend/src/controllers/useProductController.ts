@@ -1,9 +1,14 @@
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useEffect } from "react";
 import { useNavigate } from "react-router";
 
 import type { RemoteAssistanceJoinResult } from "@uurc/shared/roomSession";
 
-import type { BusyAction, RemoteControlContext, RoomJoinContext } from "../app/remoteControlTypes.js";
+import type {
+  BusyAction,
+  RemoteControlContext,
+  RemoteControlHandoff,
+  RoomJoinContext,
+} from "../app/remoteControlTypes.js";
 import {
   clearAuthState,
   createMobileDevice,
@@ -23,6 +28,13 @@ import {
 import { stopRemoteSignalGateway } from "../api/remoteSignalApi.js";
 import { writeLocalClipboardText } from "../browser/clipboard.js";
 import { pickControllableDesktop } from "../devices/deviceSummary.js";
+import {
+  closeConnection,
+  getConnection,
+  listConnections,
+  openConnection,
+  refreshConnectionHandoff,
+} from "../remote/remoteConnectionsStore.js";
 import { formatRemoteAssistanceMode } from "../remote/remoteRoomUiModel.js";
 import { preloadRemoteControlRoute } from "../routeLoaders.js";
 import { useAccountController } from "./useAccountController.js";
@@ -35,7 +47,6 @@ export function useProductController() {
   const accountState = useAccountController();
   const deviceState = useDeviceController();
   const { busy, error, run, setError } = useBusyAction("status");
-  const [controlHandoff, setControlHandoff] = useState<RemoteControlContext["handoff"]>(null);
   const { toast, showToast, dismissToast } = useToastController();
   const navigate = useNavigate();
 
@@ -109,10 +120,11 @@ export function useProductController() {
     }
     await runProductAction("logout", async () => {
       await stopRemoteSignalGateway().catch(() => undefined);
-      if (controlHandoff?.roomJoinContext.kind === "remote_assistance") {
-        await cancelRemoteAssistance(
-          controlHandoff.roomJoinContext.connectId ?? controlHandoff.roomJoinContext.deviceId,
-        ).catch(() => undefined);
+      // 所有已建立的连接都要收掉，不能只处理"当前这一个"。
+      for (const connection of listConnections()) {
+        if (connection.handoff.roomJoinContext.kind !== "remote_assistance") continue;
+        const { connectId, deviceId } = connection.handoff.roomJoinContext;
+        await cancelRemoteAssistance(connectId ?? deviceId).catch(() => undefined);
       }
       accountState.setAuthStatus(await clearAuthState());
       accountState.setAuthJson("");
@@ -120,9 +132,20 @@ export function useProductController() {
       accountState.setCodeSent(false);
       accountState.setSmsCountdown(0);
       deviceState.resetDevices();
-      setControlHandoff(null);
+      for (const connection of listConnections()) closeConnection(connection.deviceId);
       navigate("/login", { replace: true });
     });
+  }
+
+  /**
+   * 关掉一条在途连接（页签上的 ×）。
+   *
+   * 与远控页里的「断开」等价：停网关、关本地会话，再从连接仓移除。
+   * 刻意不做二次确认——页签上的 × 已经是明确的关闭意图。
+   */
+  async function closeRemoteConnection(deviceId: string) {
+    await stopRemoteSignalGateway().catch(() => undefined);
+    closeConnection(deviceId);
   }
 
   async function ensureMobileDevice() {
@@ -172,15 +195,35 @@ export function useProductController() {
       const devices = await getDeviceGroups();
       deviceState.setDevices(devices);
       deviceState.setDevicesLoaded(true);
+      // 只更新"用户已选中的那台"：选中项现在是要跨页面存活的，
+      // 远控页里刷新设备、或从别的页面刷新列表，都不能把它重置掉。
       const target = pickControllableDesktop(devices.desktopDevices, accountState.authStatus?.deviceId);
-      deviceState.setSelectedDeviceId(target?.deviceId ?? devices.desktopDevices[0]?.deviceId ?? "");
+      const fallback = target?.deviceId ?? devices.desktopDevices[0]?.deviceId ?? "";
+      setSelectedDeviceIdIfMissing(fallback);
     });
   }
 
+  /**
+   * 选中设备为空时才填默认值。
+   *
+   * 选中项从"局部 state"升格成 controller 级就能一直存活，这样离开远控页
+   * 不会丢掉"连的是哪台"，远控页本身也能在设备列表尚未刷新时就知道目标。
+   */
+  function setSelectedDeviceIdIfMissing(fallback: string) {
+    if (!fallback) return;
+    deviceState.setSelectedDeviceId((current) => current || fallback);
+  }
+
+  /**
+   * 打开一台设备的远控页。
+   *
+   * 关键语义：这个函数**只负责切换视图**，不代表建立连接。连接已经存在
+   * （之前连过、只是退回了列表）就直接复用那一份，页面上的断开/重连都作用在
+   * 同一个连接对象上；因此来回切设备不会拆掉任何一路。
+   */
   function handleOpenDevice(deviceId: string) {
     preloadRemoteControlRoute();
     deviceState.setSelectedDeviceId(deviceId);
-    setControlHandoff(null);
     startTransition(() => navigate(`/devices/${encodeURIComponent(deviceId)}/control`));
   }
 
@@ -242,10 +285,15 @@ export function useProductController() {
         targetPlatform: joined.assistance.targetPlatform,
       };
       deviceState.setSelectedDeviceId(joined.assistance.connectId);
-      setControlHandoff({
+      const assistanceHandoff: RemoteControlHandoff = {
         roomResponse: joined,
         roomJoinContext,
         remoteBootstrap: await getRemoteBootstrap(),
+      };
+      openConnection({
+        deviceId: joined.assistance.connectId,
+        deviceName: joined.assistance.deviceName ?? "远程协助",
+        handoff: assistanceHandoff,
       });
       deviceState.setForceJoin(false);
       deviceState.setAssistanceNotice(`已进入远程协助：${formatRemoteAssistanceMode(modeResult.controlMode)}`);
@@ -296,6 +344,7 @@ export function useProductController() {
       onOpenDevice: handleOpenDevice,
       onAssistanceConnectIdChange: deviceState.setAssistanceConnectId,
       onStartRemoteAssistance: () => void handleStartRemoteAssistance(),
+      onCloseRemoteConnection: (deviceId: string) => void closeRemoteConnection(deviceId),
     },
     assistance: {
       busy,
@@ -320,11 +369,30 @@ export function useProductController() {
       authStatus: accountState.authStatus,
       devices: deviceState.devices,
       devicesLoaded: deviceState.devicesLoaded,
-      handoff: controlHandoff,
+      selectedDeviceId: deviceState.selectedDeviceIdState,
+      // 连接不再由"当前页面"持有，而是存在连接仓里按 deviceId 索引；
+      // 页面只是视图，切走再切回来仍是同一个连接。
+      getConnection: (deviceId) => getConnection(deviceId)?.handoff ?? null,
+      openConnection: (deviceId, handoff, deviceName) =>
+        openConnection({
+          deviceId,
+          deviceName: deviceName ?? handoff.roomJoinContext.deviceName ?? findDeviceName(deviceId),
+          handoff,
+        }),
+      closeConnection: (deviceId) => closeConnection(deviceId),
+      refreshConnection: (deviceId, update) => refreshConnectionHandoff(deviceId, update),
       onDevicesChange: deviceState.setDevices,
-      onControlLeave: () => setControlHandoff(null),
     } satisfies RemoteControlContext,
   };
+
+  function findDeviceName(deviceId: string): string {
+    const all = [
+      ...deviceState.devices.desktopDevices,
+      ...deviceState.devices.mobileDevices,
+      ...deviceState.devices.tvDevices,
+    ];
+    return all.find((device) => device.deviceId === deviceId)?.alias ?? deviceId;
+  }
 }
 
 function isValidMobileNumber(regionCode: string, mobile: string): boolean {

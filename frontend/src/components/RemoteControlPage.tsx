@@ -3,6 +3,7 @@ import { AnimatePresence } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 import { RemoteCommandBar, type RemoteCommandBarProps } from "./RemoteCommandBar.js";
+import { RemoteConnectionTabs } from "./RemoteConnectionTabs.js";
 import type { RemoteClipboardPanelProps } from "./RemoteClipboardPanel.js";
 import type { RemoteConnectionQualityPanelProps } from "./RemoteConnectionQualityPanel.js";
 import type { RemoteControlDiagnosticsDrawerProps } from "./RemoteControlDiagnosticsDrawer.js";
@@ -23,6 +24,9 @@ export interface RemoteControlPageProps {
     isFullscreen: boolean;
     onReturnToDevices: () => void;
     remoteStageFrameRef: RefObject<HTMLDivElement | null>;
+    /** 页内切换：直接跳到另一台已连接的设备。 */
+    onSwitchConnection: (deviceId: string) => void;
+    onCloseConnection: (deviceId: string) => void;
   };
   topbar: RemoteControlTopbarProps;
   commandBar: RemoteCommandBarProps;
@@ -114,6 +118,16 @@ export function RemoteControlPage(props: RemoteControlPageProps) {
 
   return (
     <main className="control-shell">
+      {/*
+        多连接时在顶栏上方给一条页签，点一下就换到另一台已连接的设备，
+        不必先退回设备列表 —— 这是"多机来回切"的主要入口。
+      */}
+      <RemoteConnectionTabs
+        activeDeviceId={props.topbar.selectedDevice?.deviceId}
+        onClose={shell.onCloseConnection}
+        onSwitch={shell.onSwitchConnection}
+      />
+
       <RemoteControlTopbar
         {...props.topbar}
         screenPicker={props.insights.videoSources}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
 import { STREAMER_CLIENT_TYPES } from "@uurc/shared/streamer/connectOptionsModel";
@@ -31,7 +31,23 @@ import { useSignalGatewayController } from "./useSignalGatewayController.js";
 import { useToastController } from "./useToastController.js";
 
 export function useRemoteControlController(context: RemoteControlContext) {
-  const { authStatus, devices, devicesLoaded, handoff, onControlLeave, onDevicesChange } = context;
+  const {
+    authStatus,
+    devices,
+    devicesLoaded,
+    selectedDeviceId: selectedDeviceIdState,
+    getConnection,
+    openConnection,
+    closeConnection,
+    refreshConnection,
+    onDevicesChange,
+  } = context;
+  const { deviceId: routeDeviceId } = useParams<{ deviceId: string }>();
+  // 路由里的 deviceId 是这台设备的权威来源；拿不到时退回列表选中项，
+  // 这样"选中即连"的老行为不会因为改了路由形态而丢失。
+  const routeSelectedDeviceId = routeDeviceId ?? selectedDeviceIdState ?? "";
+  // 这台设备已经建立过的连接（从列表退回再点进来会命中，无需重连）。
+  const handoff = getConnection(routeSelectedDeviceId);
   const { roomResponse, setRoomResponse, roomJoinContext, setRoomJoinContext, remoteBootstrap, setRemoteBootstrap } =
     useRoomController(handoff);
   const [forceJoin, setForceJoin] = useState(handoff?.roomJoinContext.forceJoin ?? false);
@@ -104,7 +120,6 @@ export function useRemoteControlController(context: RemoteControlContext) {
     [handleRemoteAudioStream, handleRemoteMediaStream],
   );
   const navigate = useNavigate();
-  const { deviceId: routeSelectedDeviceId = "" } = useParams<{ deviceId: string }>();
 
   const allDevices = useMemo(
     () => [...devices.desktopDevices, ...devices.mobileDevices, ...devices.tvDevices],
@@ -246,36 +261,52 @@ export function useRemoteControlController(context: RemoteControlContext) {
     setRemoteSignalDiagnostics,
     setRoomJoinContext,
     setRoomResponse,
+    // 房间握手成功后把成果写回连接仓：这样切到别的设备、再切回来，
+    // 直接拿到的就是连好的那一份，不用重新握手。
+    onJoined: (joined) =>
+      openConnection(joined.roomJoinContext.deviceId, joined),
+    onRoomContextPatched: (patch) => refreshConnection(selectedDeviceId, { roomJoinContext: patch }),
     setSignalGatewayContext,
     setSignalGatewayStatus,
     showToast,
   });
 
-  async function handleReturnToDevices() {
-    if (busy !== null) return;
-    // 仅在确有可断开的活动连接时才二次确认；已手动断开（canDisconnectRemote 为 false）后直接返回，
-    // 不再因残留的 roomJoinContext 误弹“将断开远控”确认框。
-    const hasActiveSession = canDisconnectRemote;
-    if (hasActiveSession) {
-      const message =
-        roomJoinContext?.kind === "remote_assistance"
-          ? "返回将断开当前远控并取消本次远程协助，确定返回？"
-          : "返回将断开当前远控并释放 UU 房间占用，确定返回？";
-      if (typeof window !== "undefined" && !window.confirm(message)) return;
+  /** 从页签上关掉某条连接；如果关的是当前这台，就退回设备列表。 */
+  async function handleCloseOtherConnection(deviceId: string) {
+    const isCurrent = deviceId === selectedDeviceId;
+    try {
       await handleStopSignalGateway();
+    } catch {
+      // 停网关失败不阻塞关闭：本地会话照样要关。
+    } finally {
+      if (isCurrent) resetBrowserRemoteSession();
+      closeConnection(deviceId);
+      if (isCurrent) navigate("/devices");
     }
-    onControlLeave();
+  }
+
+  /**
+   * 返回设备列表：**只是切走视图，不断开连接**。
+   *
+   * 这是这一版和以往最大的语义差异。连接对象存在连接仓里，页签会留在设备名单上方，
+   * 随时点回来继续用；要真正断开必须点顶栏的「断开」或页签的 ×。
+   */
+  function handleReturnToDevices() {
+    if (busy !== null) return;
     navigate("/devices");
   }
 
-  // 顶栏的「断开」是明确的结束动作：释放会话后直接回设备列表，不再需要二次确认。
+  // 顶栏的「断开」才是结束动作：释放在途的握手/网关，关掉 WebRTC 会话，
+  // 再从连接仓里删掉这条连接。失败也要删——不能留一条断不掉的僵尸页签。
   async function handleDisconnectRemote() {
     if (busy !== null) return;
     try {
       await handleStopSignalGateway();
+    } catch {
+      // 停网关失败不阻塞断开：后面照样会关本地会话并移除连接。
     } finally {
-      // 释放房间失败也不能把用户留在黑屏的控制页上。
-      onControlLeave();
+      resetBrowserRemoteSession();
+      closeConnection(selectedDeviceId);
       navigate("/devices");
     }
   }
@@ -512,6 +543,9 @@ export function useRemoteControlController(context: RemoteControlContext) {
       isFullscreen,
       onReturnToDevices: () => void handleReturnToDevices(),
       remoteStageFrameRef,
+      onSwitchConnection: (deviceId: string) =>
+        startTransition(() => navigate(`/devices/${encodeURIComponent(deviceId)}/control`)),
+      onCloseConnection: (deviceId: string) => void handleCloseOtherConnection(deviceId),
     },
     topbar: {
       browserRemoteState,

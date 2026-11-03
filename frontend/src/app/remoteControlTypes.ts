@@ -50,9 +50,20 @@ export interface RemoteControlContext {
   authStatus: AuthStatus | null;
   devices: UuDeviceGroups;
   devicesLoaded: boolean;
-  handoff: RemoteControlHandoff | null;
+  /** 设备列表里当前选中的设备，作为路由没带 deviceId 时的兜底目标。 */
+  selectedDeviceId: string;
+  /**
+   * 取这台设备已建立的连接（没有则 null）。
+   *
+   * 连接的生命周期不再跟随页面：页面卸载不会拆连接，只有「断开」或页签的 × 会。
+   * 因此从远控页退回设备列表、再点另一台设备，前一台仍在后台保持。
+   */
+  getConnection: (deviceId: string) => RemoteControlHandoff | null;
+  /** 建立/更新一条连接；deviceName 缺省时由调用方从设备列表补齐。 */
+  openConnection: (deviceId: string, handoff: RemoteControlHandoff, deviceName?: string) => void;
+  closeConnection: (deviceId: string) => void;
+  refreshConnection: (deviceId: string, update: Partial<RemoteControlHandoff>) => void;
   onDevicesChange: (devices: UuDeviceGroups) => void;
-  onControlLeave: () => void;
 }
 
 export type RemoteVideoStream = {

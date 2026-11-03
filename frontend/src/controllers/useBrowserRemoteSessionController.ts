@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import type { DecodedStreamerCursorShape } from "@uurc/shared/streamer/controlChannelDecode";
 import { buildDefaultStreamerConnectOptionsBase64 } from "@uurc/shared/streamer/connectOptions";
@@ -27,14 +27,14 @@ export function useBrowserRemoteSessionController() {
   const archivedDebugEventsRef = useRef<BrowserRemoteDebugEvent[]>([]);
   const [state, setState] = useState<BrowserRemoteSessionState>(createIdleBrowserRemoteState);
 
-  useEffect(
-    () => () => {
-      const closedState = sessionRef.current?.close();
-      if (closedState) archivedDebugEventsRef.current = closedState.debugEvents;
-      sessionRef.current = null;
-    },
-    [],
-  );
+  /*
+   * 这里**故意不做卸载清理**。
+   *
+   * 远控页是可切走的视图，连接要活过页面：从远控页退回设备列表时组件会被卸载，
+   * 若在这里 close 掉 WebRTC 会话，就等于"离开页面=断开"，与"连接独立存在"
+   * 的设计冲突。真正需要销毁的时机只有两个：用户点「断开」，或页签上的 ×
+   * （两者都显式调用 close()）。整个应用卸载时浏览器会自行回收 RTCPeerConnection。
+   */
 
   function close(): void {
     const closedState = sessionRef.current?.close();

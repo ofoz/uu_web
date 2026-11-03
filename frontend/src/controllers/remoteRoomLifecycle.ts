@@ -6,7 +6,7 @@ import type { RemoteSignalGatewayStatus } from "@uurc/shared/signalGateway/model
 import type { RemoteSignalReadinessDiagnostics } from "@uurc/shared/streamer/readiness";
 import type { RoomJoinResult } from "@uurc/shared/roomSession";
 
-import type { BusyAction, RoomJoinContext } from "../app/remoteControlTypes.js";
+import type { BusyAction, RemoteControlHandoff, RoomJoinContext } from "../app/remoteControlTypes.js";
 import { SELF_DEVICE_BLOCKED_REASON } from "../app/remoteControlTypes.js";
 import {
   getRemoteSignalDiagnostics,
@@ -39,6 +39,13 @@ interface RemoteRoomLifecycleOptions {
   setSignalGatewayContext: Dispatch<SetStateAction<RoomJoinContext | null>>;
   setSignalGatewayStatus: Dispatch<SetStateAction<RemoteSignalGatewayStatus | null>>;
   showToast(message: string): void;
+  /**
+   * 握手完成、拿到可用房间时回调，用于把这份 handoff 存进连接仓。
+   * 连接仓不归这个生命周期管，这里只负责通知"这一份连好了"。
+   */
+  onJoined?: (handoff: RemoteControlHandoff) => void;
+  /** 房间上下文被异步修正（例如占用状态变化）时回调，同步回连接仓。 */
+  onRoomContextPatched?: (context: RoomJoinContext) => void;
 }
 
 export function createRemoteRoomLifecycle(options: RemoteRoomLifecycleOptions) {
@@ -63,8 +70,12 @@ export function createRemoteRoomLifecycle(options: RemoteRoomLifecycleOptions) {
       options.onForceJoinChange(joinWithForce);
       options.resetSignalGateway();
       options.resetBrowserRemoteSession();
-      options.setRemoteBootstrap(joined.roomConfigSummary ? await getRemoteBootstrap() : null);
-      if (joined.roomConfigSummary) nextContext = context;
+      const bootstrap = joined.roomConfigSummary ? await getRemoteBootstrap() : null;
+      options.setRemoteBootstrap(bootstrap);
+      if (joined.roomConfigSummary && bootstrap) {
+        nextContext = context;
+        options.onJoined?.({ roomResponse: joined, roomJoinContext: context, remoteBootstrap: bootstrap });
+      }
     });
     return nextContext;
   }
@@ -118,7 +129,16 @@ export function createRemoteRoomLifecycle(options: RemoteRoomLifecycleOptions) {
         nextStatus.roomClear &&
         (nextStatus.roomClear.body.code === undefined || nextStatus.roomClear.body.code === 0)
       ) {
+        /* 注意：不能把 onRoomContextPatched 写在 setRoomJoinContext 的 updater 里。
+         * React 会在**渲染阶段**执行 updater，而 onRoomContextPatched 会写连接仓并
+         * 通知所有订阅者（设备列表/远控页顶部的页签条），那就成了"渲染中更新别的组件"，
+         * React 会报 "Cannot update a component while rendering a different component"。
+         * 这里改成先算好，再用副作用安全的方式通知。
+         */
         options.setRoomJoinContext((current) => (current ? { ...current, occupiedAtJoin: false } : current));
+        if (options.roomJoinContext) {
+          options.onRoomContextPatched?.({ ...options.roomJoinContext, occupiedAtJoin: false });
+        }
       }
       if (clearContext?.kind !== "remote_assistance") {
         try {

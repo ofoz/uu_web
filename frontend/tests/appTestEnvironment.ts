@@ -2,6 +2,7 @@ import { cleanup } from "@testing-library/react";
 import { vi } from "vitest";
 
 import AppComponent from "../src/App.js";
+import { resetConnections } from "../src/remote/remoteConnectionsStore.js";
 import { appBackend, handleFetch } from "./appBackendFixture.js";
 import { TestPeerConnection } from "./appBrowserFakes.js";
 
@@ -98,6 +99,12 @@ export function setupAppTest(): void {
 export function cleanupAppTest(): void {
   cleanup();
   vi.unstubAllGlobals();
+  /*
+   * 连接仓是模块级单例（真实运行时就该如此，连接要活过页面）。
+   * 但测试里它会在用例之间串味：上一例连过的设备会被下一例当成"已连接"，
+   * 于是不再触发加入房间，断言全落空。这里每例结束清一次。
+   */
+  resetConnections();
 }
 
 export function seedLoginState(status: typeof authReady): void {

@@ -298,7 +298,63 @@ describe("App remote lifecycle", () => {
     expect(screen.queryByRole("button", { name: "断开" })).not.toBeInTheDocument();
   });
 
-  it("disconnects the active remote session before returning to the device list", async () => {
+  it("keeps the session alive when leaving the control page for the device list", async () => {
+    /* 只盯真实的远控连接。
+     * TestPeerConnection.closed 是全局标记，而 useRemoteControlPreferences 在挂载时
+     * 会新建一个探针 PeerConnection 再立即 close 掉（用于探测 WebRTC 是否可用），
+     * 那个探针也会把闭标记打成 true，用它判断"会话是否被关掉"会误报。
+     * 这里给真实连接单独记一份实例级 closed，断言它本人没被关。 */
+    const livePeers: TrackedPeerConnection[] = [];
+    class TrackedPeerConnection extends TestPeerConnection {
+      closedItself = false;
+      constructor(configuration?: RTCConfiguration) {
+        super(configuration);
+        // 探针只传 { iceServers: [] }，远控连接会带上完整的 RTCConfiguration（含 iceTransportPolicy）。
+        if (configuration && "iceTransportPolicy" in configuration) livePeers.push(this);
+      }
+      close(): void {
+        this.closedItself = true;
+        super.close();
+      }
+    }
+
+    vi.stubGlobal("RTCPeerConnection", TrackedPeerConnection);
+    appBackend.currentParticipants = [];
+    const user = userEvent.setup();
+    render(<App />);
+
+    await openOfficeMacControl(user);
+    await startCompatibleConnection(user);
+    await waitFor(() => {
+      expectSignalState("已连接");
+    });
+    expect(livePeers).toHaveLength(1);
+    const sessionPeer = livePeers[0];
+    expect(sessionPeer.closedItself).toBe(false);
+
+    await user.click(screen.getByRole("button", { name: "返回设备列表" }));
+
+    await screen.findByRole("heading", { name: "我的设备" });
+    expect(window.location.pathname).toBe("/devices");
+    // 返回只是切视图：不能释放网关、不能关 WebRTC 会话，否则就退回"离开即断开"了。
+    expect(appBackend.requestLog.some((call) => call.method === "DELETE" && call.path === "/api/remote/signal")).toBe(
+      false,
+    );
+    expect(sessionPeer.closedItself).toBe(false);
+
+    // 列表顶部出现这条连接，点回来还是同一个会话，不需要重新加入房间。
+    const tab = await screen.findByRole("tab", { name: /Office Mac/ });
+    await user.click(tab);
+    await screen.findByRole("heading", { name: "Office Mac" });
+    expect(window.location.pathname).toBe("/devices/desktop-1/control");
+    expect(uuCalls("/api/v1/room/join/by_device/desktop-1")).toHaveLength(1);
+    expect(screen.queryByRole("heading", { name: "我的设备" })).not.toBeInTheDocument();
+    // 点回来也没有重建连接，仍是同一个 PeerConnection 且依然活着。
+    expect(livePeers).toEqual([sessionPeer]);
+    expect(sessionPeer.closedItself).toBe(false);
+  });
+
+  it("tears the session down when the connection tab is closed from the device list", async () => {
     vi.stubGlobal("RTCPeerConnection", TestPeerConnection);
     appBackend.currentParticipants = [];
     const user = userEvent.setup();
@@ -311,16 +367,20 @@ describe("App remote lifecycle", () => {
     });
 
     await user.click(screen.getByRole("button", { name: "返回设备列表" }));
-
     await screen.findByRole("heading", { name: "我的设备" });
-    expect(window.location.pathname).toBe("/devices");
+
+    await user.click(await screen.findByRole("button", { name: /断开并关闭 Office Mac/ }));
+
+    // 页签的 × 才是真断开：停网关、关会话、页签消失。
     await waitFor(() => {
       expect(appBackend.requestLog.some((call) => call.method === "DELETE" && call.path === "/api/remote/signal")).toBe(
         true,
       );
     });
-    expect(TestPeerConnection.closed).toBe(true);
-    expect(screen.queryByRole("heading", { name: "Office Mac" })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole("tab", { name: /Office Mac/ })).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("heading", { name: "我的设备" })).toBeInTheDocument();
   });
 
   it("keeps extra incoming video tracks out of the main remote-control surface", async () => {
