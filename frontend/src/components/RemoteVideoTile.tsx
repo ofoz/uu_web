@@ -17,6 +17,16 @@ export function RemoteVideoTile({
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const presentedFramesRef = useRef<number | undefined>(undefined);
+  /*
+   * 回调走 ref，不放进下面那个 effect 的依赖里。
+   *
+   * 这个 effect 会挂事件监听、起轮询、并在末尾 emitSample("attached")。
+   * 只要 onVideoSample 换了引用，整段就被拆了重装、再报一次 attached，
+   * 于是父组件 setState → 重渲染 → 回调新引用 → 再重装，滚成无限更新
+   * （`Maximum update depth exceeded`）。回调不是"副作用依赖"，它只是出口。
+   */
+  const onVideoSampleRef = useRef(onVideoSample);
+  onVideoSampleRef.current = onVideoSample;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -29,7 +39,10 @@ export function RemoteVideoTile({
     let active = true;
     const emitSample = (event: string, playbackError?: unknown) => {
       if (!active) return;
-      onVideoSample(videoId, readVideoElementSample(video, videoId, event, presentedFramesRef.current, playbackError));
+      onVideoSampleRef.current(
+        videoId,
+        readVideoElementSample(video, videoId, event, presentedFramesRef.current, playbackError),
+      );
     };
     try {
       const playResult = video.play();
@@ -68,7 +81,7 @@ export function RemoteVideoTile({
         video.removeEventListener(eventName, handler);
       }
     };
-  }, [onVideoSample, stream, videoId, visible]);
+  }, [stream, videoId, visible]);
 
   return (
     <div

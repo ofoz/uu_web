@@ -19,6 +19,7 @@ import { formatSignalGatewayErrorHint } from "../remote/remoteSignalUiModel.js";
 import { useBrowserRemoteSessionController } from "./useBrowserRemoteSessionController.js";
 import { useRemoteAudioController } from "./useRemoteAudioController.js";
 import { stopSignalPolling } from "../remote/signalPolling.js";
+import { registerRemoteSessionHandlers } from "../remote/remoteSessionEventBridge.js";
 import { useRemoteAutoConnect } from "./useRemoteAutoConnect.js";
 import { useBusyAction } from "./useBusyAction.js";
 import { createRemoteRoomLifecycle } from "./remoteRoomLifecycle.js";
@@ -223,6 +224,23 @@ export function useRemoteControlController(context: RemoteControlContext) {
     onError: setError,
     onSessionStateChange: setBrowserRemoteState,
   });
+  /*
+   * 把本页的处理函数注册到会话事件分发器上。
+   *
+   * 会话是模块级的、活过本页；页面挂载时在这里"认领"事件，卸载时注销。
+   * 这样无论用户怎样在设备列表和远控页之间来回切，被控端推来的流都有人接，
+   * 切回来时分发器会把页面不在场期间攒下的最后一份流补发一次 —— 画面不会再变成空白。
+   *
+   * 位置很关键：必须放在 handleRemoteClipboard / handleRemoteCursorShape 的
+   * 声明之后。它们是 const，在上面取值会落进暂时性死区（TDZ），运行时报错。
+   */
+  useEffect(() => {
+    return registerRemoteSessionHandlers({
+      onRemoteStream: handleRemoteStream,
+      onRemoteClipboard: handleRemoteClipboard,
+      onRemoteCursorShape: handleRemoteCursorShape,
+    });
+  }, [handleRemoteClipboard, handleRemoteCursorShape, handleRemoteStream]);
   useEffect(() => {
     let active = true;
     void getRuntimeProfile()
@@ -332,15 +350,18 @@ export function useRemoteControlController(context: RemoteControlContext) {
     resetInputControl();
     resetClipboardSession();
     const targetPlatform = resolveTargetPlatform();
+    /*
+     * 远端流 / 剪贴板 / 光标不在这里传回调：它们走 remote/remoteSessionEventBridge 的
+     * 模块级分发器，由当前挂载的远控页注册处理器。会话要活过页面，若把这些回调
+     * 闭包在本页的 setState 上，退回设备列表后它们就指向已卸载组件，
+     * 被控端推来的 track 无人接收，切回来时画面是空的。
+     */
     const session = await createBrowserRemoteSession({
       deviceId: authStatus.deviceId,
       forceRelay: options.forceRelay ?? (connectionRouteMode === "relay" ? true : undefined),
       gzipSdp: sdpTransportMode === "gzip",
       remoteAssistance: roomJoinContext?.kind === "remote_assistance",
       targetPlatform,
-      onRemoteStream: handleRemoteStream,
-      onRemoteClipboard: handleRemoteClipboard,
-      onRemoteCursorShape: handleRemoteCursorShape,
     });
     await refreshSignalEvents(session);
   }

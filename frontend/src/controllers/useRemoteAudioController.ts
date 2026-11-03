@@ -8,6 +8,7 @@ import type {
   BrowserRemoteSessionState,
 } from "../remote/browserRemoteSessionTypes.js";
 import { createSingleTrackMediaStream } from "../remote/remoteVideoModel.js";
+import { setRemoteAudioStream as publishRemoteAudioStream, useRemoteAudioStream } from "../remote/remoteAudioStreamStore.js";
 
 interface UseRemoteAudioControllerOptions {
   browserSessionRef: RefObject<BrowserRemoteSession | null>;
@@ -32,7 +33,8 @@ export function useRemoteAudioController({ browserSessionRef, onSessionStateChan
   const remoteAudioStreamRef = useRef<MediaStream | null>(null);
   const detachTrackListenerRef = useRef<() => void>(() => undefined);
   const playGenerationRef = useRef(0);
-  const [remoteAudioStream, setRemoteAudioStream] = useState<MediaStream | null>(null);
+  /* 音轨放在模块级 store：页面卸载后它还得留着，否则切回来音频就没了。 */
+  const remoteAudioStream = useRemoteAudioStream();
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(1);
   const [playbackState, setPlaybackState] = useState<RemoteAudioPlaybackState>("idle");
@@ -128,7 +130,7 @@ export function useRemoteAudioController({ browserSessionRef, onSessionStateChan
     detachTrackListenerRef.current = () => undefined;
     activeTrackRef.current = null;
     clearAudioSink();
-    setRemoteAudioStream(null);
+    publishRemoteAudioStream(null);
     setPlaybackState("idle");
     setPlaybackErrorName("");
   }, [clearAudioSink]);
@@ -158,7 +160,7 @@ export function useRemoteAudioController({ browserSessionRef, onSessionStateChan
 
       const nextStream = createSingleTrackMediaStream(nextTrack);
       remoteAudioStreamRef.current = nextStream;
-      setRemoteAudioStream(nextStream);
+      publishRemoteAudioStream(nextStream);
       setPlaybackState("waiting");
       setPlaybackErrorName("");
     },
@@ -192,13 +194,13 @@ export function useRemoteAudioController({ browserSessionRef, onSessionStateChan
     if (element) element.volume = volume;
   }, [volume]);
 
-  useEffect(
-    () => () => {
-      detachTrackListenerRef.current();
-      clearAudioSink();
-    },
-    [clearAudioSink],
-  );
+  /*
+   * 这里**不做**卸载清理。
+   *
+   * 远控页会随路由卸载，但音轨要活过页面：在清理里 detach 监听、清 `srcObject`，
+   * 等于每次"返回设备列表"都把音频拆一遍，切回来还得等被控端重新推 track。
+   * 真正的清理只在 resetRemoteAudio（断开 / 换会话）里做。
+   */
 
   const toggleMuted = useCallback(() => {
     setMuted((current) => {

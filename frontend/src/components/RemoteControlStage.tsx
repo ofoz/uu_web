@@ -44,7 +44,7 @@ export interface RemoteControlStageProps {
   primaryRemoteVideoId: string;
   remoteStageRef: RefObject<HTMLDivElement | null>;
   remoteStageViewMode: RemoteStageViewMode;
-  remoteVideoStreams: RemoteVideoStream[];
+  remoteVideoStreams: readonly RemoteVideoStream[];
   selectedDevice: UuDevice | null;
   stageStatusLabel: string;
 }

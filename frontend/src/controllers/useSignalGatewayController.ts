@@ -127,7 +127,18 @@ export function useSignalGatewayController({
   const pollState = useSignalPollSnapshot(deviceId);
   useEffect(() => {
     if (!pollState) return;
-    if (pollState.events.length > 0) setSignalEvents(pollState.events);
+    /*
+     * 只在内容真的变了才写回本地 state。
+     *
+     * 轮询器每次 produce 快照都会给出新的 `events` 数组引用，无条件 setSignalEvents
+     * 会让"快照变 → setState → 渲染 → 快照变"转起来。这里按长度与游标做一次廉价比对，
+     * 相同就跳过。
+     */
+    if (pollState.events.length > 0) {
+      setSignalEvents((current) =>
+        sameSignalEventIds(current, pollState.events) ? current : pollState.events,
+      );
+    }
     if (pollState.diagnostics) setRemoteSignalDiagnostics(pollState.diagnostics);
     if (pollState.gatewayStatus) setSignalGatewayStatus(pollState.gatewayStatus);
   }, [pollState]);
@@ -158,6 +169,16 @@ function mergeSignalEvents(
   const byId = new Map(current.map((event) => [event.id, event]));
   for (const event of incoming) byId.set(event.id, event);
   return [...byId.values()].sort((left, right) => left.id - right.id).slice(-SIGNAL_GATEWAY_MAX_EVENTS);
+}
+
+/** 两份事件列表的 id 序列是否一致（用于避免无谓的 setState）。 */
+function sameSignalEventIds(left: RemoteSignalGatewayEvent[], right: RemoteSignalGatewayEvent[]): boolean {
+  if (left === right) return true;
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index]?.id !== right[index]?.id) return false;
+  }
+  return true;
 }
 
 function synchronizeGatewayStatus(

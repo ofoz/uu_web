@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { appBackend, uuCalls } from "./appBackendFixture.js";
 import { FakeMediaStream, TestPeerConnection } from "./appBrowserFakes.js";
 import {
-  expectSignalState,
   getPrimaryAction,
   openAdvancedSettings,
   openOfficeMacControl,
@@ -178,9 +177,7 @@ describe("App remote lifecycle", () => {
     await waitFor(() => {
       expect(screen.getAllByText("接管加入").length).toBeGreaterThan(0);
     });
-    await waitFor(() => {
-      expectSignalState("已连接");
-    });
+    await waitForConnectionEstablished();
     await waitFor(() => {
       expect(appBackend.requestLog.filter((call) => call.path === "/api/remote/signal/control")).toHaveLength(1);
     });
@@ -199,9 +196,7 @@ describe("App remote lifecycle", () => {
 
     await openOfficeMacControl(user);
     await startCompatibleConnection(user);
-    await waitFor(() => {
-      expectSignalState("已连接");
-    });
+    await waitForConnectionEstablished();
     await waitFor(() => {
       expect(appBackend.requestLog.filter((call) => call.path === "/api/remote/signal/control")).toHaveLength(1);
     });
@@ -342,9 +337,12 @@ describe("App remote lifecycle", () => {
 
     await openOfficeMacControl(user);
     await startCompatibleConnection(user);
-    await waitFor(() => {
-      expectSignalState("已连接");
-    });
+    /*
+     * 等**会话**连上（顶栏出现「断开」），不要等信令网关的「已连接」——
+     * 那是诊断抽屉里的网关状态，answer 还没回来时它就已经是「已连接」了。
+     * 这里的断言全部围绕会话 stage，前置条件必须同源。
+     */
+    await waitForConnectionEstablished();
     expect(livePeers).toHaveLength(1);
     const sessionPeer = livePeers[0];
     expect(sessionPeer.closedItself).toBe(false);
@@ -369,6 +367,19 @@ describe("App remote lifecycle", () => {
     // 点回来也没有重建连接，仍是同一个 PeerConnection 且依然活着。
     expect(livePeers).toEqual([sessionPeer]);
     expect(sessionPeer.closedItself).toBe(false);
+
+    /*
+     * 关键：切回来必须是「已连接」，不能退回「已就绪」。
+     *
+     * 会话存活在组件 useRef 里时，虽然没人调 close()、连接本身还活着，
+     * 但页面卸载就把**唯一指向它的句柄**丢了 —— 切回来 stage 回到 idle，
+     * 界面显示"已就绪，点开始连接"，顶栏也没有「断开」。
+     * 顶栏的「断开」按钮 ⟺ stage === "connected"，用它兜住这个契约。
+     */
+    await screen.findByRole("button", { name: "断开" }, { timeout: 5_000 });
+    expect(screen.queryByText(/已就绪，点/)).not.toBeInTheDocument();
+    // 没有重新 start：control 握手只发生过一次。
+    expect(appBackend.requestLog.filter((call) => call.path === "/api/remote/signal/control")).toHaveLength(1);
   });
 
   /*
@@ -388,9 +399,7 @@ describe("App remote lifecycle", () => {
 
     await openOfficeMacControl(user);
     await startCompatibleConnection(user);
-    await waitFor(() => {
-      expectSignalState("已连接");
-    });
+    await waitForConnectionEstablished();
 
     await user.click(screen.getByRole("button", { name: "返回设备列表" }));
     await screen.findByRole("heading", { name: "我的设备" });
@@ -419,9 +428,7 @@ describe("App remote lifecycle", () => {
 
     await openOfficeMacControl(user);
     await startCompatibleConnection(user);
-    await waitFor(() => {
-      expectSignalState("已连接");
-    });
+    await waitForConnectionEstablished();
 
     await user.click(screen.getByRole("button", { name: "返回设备列表" }));
     await screen.findByRole("heading", { name: "我的设备" });
@@ -455,9 +462,7 @@ describe("App remote lifecycle", () => {
 
     await openOfficeMacControl(user);
     await startCompatibleConnection(user);
-    await waitFor(() => {
-      expectSignalState("已连接");
-    });
+    await waitForConnectionEstablished();
     await waitFor(() => {
       expect(appBackend.requestLog.filter((call) => call.path === "/api/remote/signal/control")).toHaveLength(1);
     });

@@ -2,7 +2,7 @@ import type { RemoteVideoSamplesById, RemoteVideoStream } from "../app/remoteCon
 import type { BrowserRemoteVideoElementSample } from "./browserRemoteSessionTypes.js";
 
 export function resolvePrimaryRemoteVideoId(
-  videos: RemoteVideoStream[],
+  videos: readonly RemoteVideoStream[],
   samplesById: RemoteVideoSamplesById,
   selectedVideoId: string,
 ): string {
@@ -25,7 +25,10 @@ export function createSingleTrackMediaStream(track: MediaStreamTrack): MediaStre
   }
 }
 
-function selectPrimaryRemoteVideoId(videos: RemoteVideoStream[], samplesById: RemoteVideoSamplesById): string {
+function selectPrimaryRemoteVideoId(
+  videos: readonly RemoteVideoStream[],
+  samplesById: RemoteVideoSamplesById,
+): string {
   if (videos.length === 0) return "";
 
   const scoredVideos = videos

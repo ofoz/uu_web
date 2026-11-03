@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
-import type { RemoteVideoSamplesById, RemoteVideoSourceInfo, RemoteVideoStream } from "../app/remoteControlTypes.js";
+import type { RemoteVideoSamplesById, RemoteVideoSourceInfo } from "../app/remoteControlTypes.js";
 import type { BrowserRemoteSession } from "../remote/browserRemoteSession.js";
 import type {
   BrowserRemoteSessionState,
   BrowserRemoteVideoElementSample,
 } from "../remote/browserRemoteSessionTypes.js";
 import { createSingleTrackMediaStream, resolvePrimaryRemoteVideoId } from "../remote/remoteVideoModel.js";
+import {
+  clearRemoteVideoStreams,
+  setRemoteVideoStreams as publishRemoteVideoStreams,
+  useRemoteVideoStreams,
+} from "../remote/remoteVideoStreamsStore.js";
 
 /**
  * 被控端在 SDP 里往往挂着多路 video m-line（主屏、副屏、摄像头…），
@@ -27,7 +32,11 @@ export function useRemoteVideoController({
   browserSessionRef: RefObject<BrowserRemoteSession | null>;
   onSessionStateChange(state: BrowserRemoteSessionState): void;
 }) {
-  const [remoteVideoStreams, setRemoteVideoStreams] = useState<RemoteVideoStream[]>([]);
+  /*
+   * 画面源放在模块级 store 里，不放在本组件 state。
+   * 页面卸载后这些 MediaStream 还得留着，否则切回来就只剩"暂无画面源"。
+   */
+  const remoteVideoStreams = useRemoteVideoStreams();
   const [remoteVideoSamplesById, setRemoteVideoSamplesById] = useState<RemoteVideoSamplesById>({});
   const [selectedRemoteVideoId, setSelectedRemoteVideoId] = useState("");
   const firstSeenAtByIdRef = useRef(new Map<string, number>());
@@ -47,7 +56,7 @@ export function useRemoteVideoController({
     for (const id of nextIds) {
       if (!firstSeenAtById.has(id)) firstSeenAtById.set(id, now);
     }
-    setRemoteVideoStreams(
+    publishRemoteVideoStreams(
       tracks.map((track, index) => ({
         id: track.id || `video-${index + 1}`,
         stream: createSingleTrackMediaStream(track),
@@ -58,7 +67,7 @@ export function useRemoteVideoController({
 
   const resetRemoteVideos = useCallback(() => {
     firstSeenAtByIdRef.current.clear();
-    setRemoteVideoStreams([]);
+    clearRemoteVideoStreams();
     setRemoteVideoSamplesById({});
     setSelectedRemoteVideoId("");
   }, []);

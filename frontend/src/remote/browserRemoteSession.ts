@@ -309,10 +309,22 @@ export class BrowserRemoteSession {
     await this.createAndSendLocalOffer("offer", undefined, lifecycleGeneration);
     this.assertLifecycleGeneration(lifecycleGeneration);
 
-    this.setState({
-      ...this.state,
-      stage: "offered",
-    });
+    /*
+     * offer 发完后把阶段推进到 offered。
+     *
+     * 必须守住一个竞态：applySignalEvents 与这里的 offer 流程是并发的，answer
+     * 若先一步被轮询器消费（测试 fixture 预埋事件时必然如此；真实网络上
+     * 极快的主控 + 极慢的 soac POST 也可能出现），stage 已经是 connected，
+     * 这里再无条件覆盖成 offered 就把已建立的连接打回"协商中"——而 answer 的
+     * 事件 id 已被标记 processed、游标已推进，永远不会再应用一次，
+     * 界面从此卡死在「连接中」。所以只在仍是 controlled 时才推进。
+     */
+    if (this.state.stage === "controlled") {
+      this.setState({
+        ...this.state,
+        stage: "offered",
+      });
+    }
     return this.getState();
   }
 

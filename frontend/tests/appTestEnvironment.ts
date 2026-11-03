@@ -3,6 +3,10 @@ import { vi } from "vitest";
 
 import AppComponent from "../src/App.js";
 import { resetConnections } from "../src/remote/remoteConnectionsStore.js";
+import { resetRemoteAudioStreamStore } from "../src/remote/remoteAudioStreamStore.js";
+import { resetRemoteSessionEventBridge } from "../src/remote/remoteSessionEventBridge.js";
+import { resetRemoteSessionStore } from "../src/remote/remoteSessionStore.js";
+import { resetRemoteVideoStreamsStore } from "../src/remote/remoteVideoStreamsStore.js";
 import { resetAllSignalPolling } from "../src/remote/signalPolling.js";
 import { appBackend, handleFetch } from "./appBackendFixture.js";
 import { TestPeerConnection } from "./appBrowserFakes.js";
@@ -108,6 +112,14 @@ export function cleanupAppTest(): void {
   resetConnections();
   /* 信令轮询器同为模块级且故意不随页面卸载停止，测试里必须显式清掉，否则定时器跨用例存活。 */
   resetAllSignalPolling();
+  /*
+   * 会话 / 画面源 / 音轨 / 事件分发器现在都是模块级的（正因为它们要活过页面），
+   * 测试里不清就会串味：上一例的连接被下一例当成"已连好"，断言全落空。
+   */
+  resetRemoteSessionStore();
+  resetRemoteVideoStreamsStore();
+  resetRemoteAudioStreamStore();
+  resetRemoteSessionEventBridge();
 }
 
 export function seedLoginState(status: typeof authReady): void {
