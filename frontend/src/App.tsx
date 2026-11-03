@@ -4,6 +4,7 @@ import { BrowserRouter, useLocation } from "react-router";
 import { LandingPage } from "./components/LandingPage.js";
 import { PageMetadata } from "./components/PageMetadata.js";
 import { DesktopWindowDock } from "./desktop/DesktopWindowDock.js";
+import { useTaskbarTitle } from "./desktop/useTaskbarTitle.js";
 import { loadProductRoutes } from "./routeLoaders.js";
 import { getStoredAuthStatus } from "./uu/loginStateStore.js";
 import "./styles/index.css";
@@ -23,6 +24,9 @@ export default function App({ initialLandingLoggedIn }: AppProps = {}) {
 }
 
 export function AppContent({ initialLandingLoggedIn }: AppProps) {
+  // 桌面壳里把当前设备名写进窗口标题，任务栏才能区分多台。
+  useTaskbarTitle();
+
   return (
     <>
       <PageMetadata />

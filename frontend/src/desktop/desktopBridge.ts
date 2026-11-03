@@ -10,6 +10,8 @@ export interface DesktopBridge {
   close: () => void;
   getWindowState: () => Promise<{ maximized: boolean }>;
   onWindowStateChange: (handler: (state: { maximized: boolean }) => void) => () => void;
+  /** 把标题写到操作系统任务栏，让多窗口在任务栏上能按设备名区分。 */
+  setWindowTitle?: (title: string) => void;
 }
 
 declare global {

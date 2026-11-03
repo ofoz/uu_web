@@ -133,6 +133,22 @@ ipcMain.on("uurc:window-close", (event) => {
   senderWindow(event)?.close();
 });
 
+/**
+ * 任务栏标题同步。
+ *
+ * 多窗口各控一台时，操作系统任务栏默认把每个窗口都显示成「UU 远程」，
+ * 用户没法从任务栏认出哪一个是哪台设备 —— 这直接掐死了"从任务栏切换"这件事。
+ * 页面把「设备名 · UU 远程」传上来，这里写到窗口标题上；
+ * frameless 窗口没有标题栏，改标题只影响任务栏与 Alt-Tab 的显示，不破坏外观。
+ */
+ipcMain.on("uurc:window-title", (event, title) => {
+  const win = senderWindow(event);
+  if (!win) return;
+  const next = String(title ?? "").trim();
+  if (!next) return;
+  win.setTitle(next);
+});
+
 ipcMain.handle("uurc:window-state", (event) => ({
   maximized: senderWindow(event)?.isMaximized() ?? false,
 }));
