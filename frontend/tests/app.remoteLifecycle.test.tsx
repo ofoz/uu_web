@@ -13,6 +13,20 @@ import {
 } from "./appTestActions.js";
 import { App, cleanupAppTest, setupAppTest } from "./appTestEnvironment.js";
 
+/**
+ * 等**浏览器会话**真正连上。
+ *
+ * 容易踩的坑：`expectSignalState("已连接")` 看的是诊断抽屉里的「信令状态」，
+ * 那是**信令网关**的状态；而顶栏的状态药丸、「断开」按钮取决于会话的 `stage`。
+ * 网关连上、answer 还没回来时，会话仍停在 `offered`。凡是要对会话做事
+ * （关数据通道、点断开）的用例，都必须等这个，而不是等网关或等某个请求发出。
+ *
+ * 顶栏出现「断开」按钮 ⟺ `stage === "connected"`（`canDisconnectRemote` 成立且不在协商中）。
+ */
+async function waitForConnectionEstablished(): Promise<void> {
+  await screen.findByRole("button", { name: "断开" }, { timeout: 5_000 });
+}
+
 describe("App remote lifecycle", () => {
   beforeEach(setupAppTest);
   afterEach(cleanupAppTest);
@@ -218,9 +232,12 @@ describe("App remote lifecycle", () => {
 
     await openOfficeMacControl(user);
     await startCompatibleConnection(user);
-    await waitFor(() => {
-      expect(appBackend.requestLog.filter((call) => call.path === "/api/remote/signal/control")).toHaveLength(1);
-    });
+    /*
+     * 必须等**会话**真正连上（顶栏出现「断开」即 stage=connected），不能只等
+     * `/signal/control` 请求发出：那时 answer 还没回来、stage 还是 offered，
+     * 此时关通道，恢复判定（要求 stage=connected）不成立，「控制连接已断开」永不出现。
+     */
+    await waitForConnectionEstablished();
     await user.click(screen.getByRole("tab", { name: "状态" }));
     await user.click(screen.getByRole("checkbox", { name: "自动重连" }));
 
@@ -247,9 +264,7 @@ describe("App remote lifecycle", () => {
 
     await openOfficeMacControl(user);
     await startCompatibleConnection(user);
-    await waitFor(() => {
-      expect(appBackend.requestLog.filter((call) => call.path === "/api/remote/signal/control")).toHaveLength(1);
-    });
+    await waitForConnectionEstablished();
 
     TestPeerConnection.closeDataChannel("CONTROL_DATA_CHANNEL");
 
@@ -270,10 +285,12 @@ describe("App remote lifecycle", () => {
 
     await openOfficeMacControl(user);
     await startCompatibleConnection(user);
-    await waitFor(() => {
-      expectSignalState("已连接");
-    });
-    await screen.findByRole("button", { name: "断开" });
+    /*
+     * 这里不能只等 `expectSignalState("已连接")` —— 那一行反映的是**信令网关**是否连上
+     * （诊断抽屉里的「信令状态」），与会话 stage 无关。网关连上但 answer 还没回来时，
+     * 顶栏仍是「连接中」，自然没有「断开」按钮。等会话真正进入 connected 才稳。
+     */
+    await waitForConnectionEstablished();
 
     await user.click(screen.getByRole("button", { name: "断开" }));
 
@@ -352,6 +369,46 @@ describe("App remote lifecycle", () => {
     // 点回来也没有重建连接，仍是同一个 PeerConnection 且依然活着。
     expect(livePeers).toEqual([sessionPeer]);
     expect(sessionPeer.closedItself).toBe(false);
+  });
+
+  /*
+   * 这条用例钉住一个真实踩过的坑：连接要活过页面。
+   *
+   * 信令轮询原本挂在远控页的 useEffect 里，离开页面就被 clearInterval，
+   * 服务端信令没人拉，被控端判定主控离线并主动结束会话 —— 表现就是
+   * "点返回设备列表，连接就断了"，而代码里看起来只是 navigate 了一下。
+   *
+   * 所以这里断言的是：停在设备列表期间，仍然有 /api/remote/signal/events 请求。
+   */
+  it("keeps polling the signal gateway after leaving the control page", async () => {
+    vi.stubGlobal("RTCPeerConnection", TestPeerConnection);
+    appBackend.currentParticipants = [];
+    const user = userEvent.setup();
+    render(<App />);
+
+    await openOfficeMacControl(user);
+    await startCompatibleConnection(user);
+    await waitFor(() => {
+      expectSignalState("已连接");
+    });
+
+    await user.click(screen.getByRole("button", { name: "返回设备列表" }));
+    await screen.findByRole("heading", { name: "我的设备" });
+
+    const pollingCount = () =>
+      appBackend.requestLog.filter((call) => call.path.startsWith("/api/remote/signal/events")).length;
+    const before = pollingCount();
+
+    // 已连接态 1500ms 一轮；等够两轮，确认在设备列表页上轮询没有停。
+    await waitFor(
+      () => {
+        expect(pollingCount()).toBeGreaterThan(before);
+      },
+      { timeout: 5_000 },
+    );
+    expect(appBackend.requestLog.some((call) => call.method === "DELETE" && call.path === "/api/remote/signal")).toBe(
+      false,
+    );
   });
 
   it("tears the session down when the connection tab is closed from the device list", async () => {

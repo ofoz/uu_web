@@ -36,6 +36,7 @@ import {
   refreshConnectionHandoff,
 } from "../remote/remoteConnectionsStore.js";
 import { formatRemoteAssistanceMode } from "../remote/remoteRoomUiModel.js";
+import { resetAllSignalPolling, stopSignalPolling } from "../remote/signalPolling.js";
 import { preloadRemoteControlRoute } from "../routeLoaders.js";
 import { useAccountController } from "./useAccountController.js";
 import { useAutoLoadDevices } from "./useAutoLoadDevices.js";
@@ -132,6 +133,7 @@ export function useProductController() {
       accountState.setCodeSent(false);
       accountState.setSmsCountdown(0);
       deviceState.resetDevices();
+      resetAllSignalPolling();
       for (const connection of listConnections()) closeConnection(connection.deviceId);
       navigate("/login", { replace: true });
     });
@@ -145,6 +147,8 @@ export function useProductController() {
    */
   async function closeRemoteConnection(deviceId: string) {
     await stopRemoteSignalGateway().catch(() => undefined);
+    // 轮询属于连接，连接没了就必须停，否则会一直对着已释放的会话发请求。
+    stopSignalPolling(deviceId);
     closeConnection(deviceId);
   }
 

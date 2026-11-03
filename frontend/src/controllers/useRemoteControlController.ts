@@ -18,6 +18,7 @@ import { remoteShortcutGroupTitleForPlatform } from "../remote/remoteShortcuts.j
 import { formatSignalGatewayErrorHint } from "../remote/remoteSignalUiModel.js";
 import { useBrowserRemoteSessionController } from "./useBrowserRemoteSessionController.js";
 import { useRemoteAudioController } from "./useRemoteAudioController.js";
+import { stopSignalPolling } from "../remote/signalPolling.js";
 import { useRemoteAutoConnect } from "./useRemoteAutoConnect.js";
 import { useBusyAction } from "./useBusyAction.js";
 import { createRemoteRoomLifecycle } from "./remoteRoomLifecycle.js";
@@ -91,6 +92,7 @@ export function useRemoteControlController(context: RemoteControlContext) {
   } = useSignalGatewayController({
     browserStage: browserRemoteState.stage,
     browserSessionRef: browserRemoteSession,
+    deviceId: routeSelectedDeviceId,
     onPollingError: setError,
     onSessionStateChange: setBrowserRemoteState,
   });
@@ -280,6 +282,7 @@ export function useRemoteControlController(context: RemoteControlContext) {
       // 停网关失败不阻塞关闭：本地会话照样要关。
     } finally {
       if (isCurrent) resetBrowserRemoteSession();
+      stopSignalPolling(deviceId);
       closeConnection(deviceId);
       if (isCurrent) navigate("/devices");
     }
@@ -305,6 +308,7 @@ export function useRemoteControlController(context: RemoteControlContext) {
     } catch {
       // 停网关失败不阻塞断开：后面照样会关本地会话并移除连接。
     } finally {
+      stopSignalPolling(selectedDeviceId);
       resetBrowserRemoteSession();
       closeConnection(selectedDeviceId);
       navigate("/devices");

@@ -22,19 +22,23 @@ echo "使用 node：$(command -v node)（$(node -v)）"
 cd "$(dirname "$0")/frontend"
 
 echo
-echo "=== 1/4 任务栏标题用例 ==="
-npx vitest run tests/desktopTaskbarTitle.test.tsx
+echo "=== 1/5 信令轮询器（连接活得比页面久 + 会话接手时序） ==="
+npx vitest run tests/signalPolling.test.ts
 
 echo
-echo "=== 2/4 相邻用例（新窗口按钮 / 设备列表） ==="
-npx vitest run tests/desktopNewWindow.test.tsx tests/deviceListPage.test.tsx
+echo "=== 2/5 远控生命周期（返回不断开、页签切换、页签 × 才断开） ==="
+npx vitest run tests/app.remoteLifecycle.test.tsx
 
 echo
-echo "=== 3/4 类型检查 ==="
+echo "=== 3/5 任务栏标题 + 相邻用例 ==="
+npx vitest run tests/desktopTaskbarTitle.test.tsx tests/desktopNewWindow.test.tsx tests/deviceListPage.test.tsx
+
+echo
+echo "=== 4/5 类型检查 ==="
 npx tsc --noEmit
 
 echo
-echo "=== 4/4 构建产物 ==="
+echo "=== 5/5 构建产物 ==="
 npx vite build
 rm -rf dist/prerender
 npx vite build --ssr src/entry-server.tsx --outDir dist/prerender

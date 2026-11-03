@@ -3,6 +3,7 @@ import { vi } from "vitest";
 
 import AppComponent from "../src/App.js";
 import { resetConnections } from "../src/remote/remoteConnectionsStore.js";
+import { resetAllSignalPolling } from "../src/remote/signalPolling.js";
 import { appBackend, handleFetch } from "./appBackendFixture.js";
 import { TestPeerConnection } from "./appBrowserFakes.js";
 
@@ -105,6 +106,8 @@ export function cleanupAppTest(): void {
    * 于是不再触发加入房间，断言全落空。这里每例结束清一次。
    */
   resetConnections();
+  /* 信令轮询器同为模块级且故意不随页面卸载停止，测试里必须显式清掉，否则定时器跨用例存活。 */
+  resetAllSignalPolling();
 }
 
 export function seedLoginState(status: typeof authReady): void {
