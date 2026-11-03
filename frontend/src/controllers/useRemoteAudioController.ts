@@ -11,6 +11,8 @@ import { createSingleTrackMediaStream } from "../remote/remoteVideoModel.js";
 import { setRemoteAudioStream as publishRemoteAudioStream, useRemoteAudioStream } from "../remote/remoteAudioStreamStore.js";
 
 interface UseRemoteAudioControllerOptions {
+  /** 被控设备 —— 音轨在 store 里按它分片。 */
+  deviceId: string;
   browserSessionRef: RefObject<BrowserRemoteSession | null>;
   onSessionStateChange(state: BrowserRemoteSessionState): void;
 }
@@ -27,14 +29,18 @@ function getErrorName(error: unknown): string {
   return error instanceof Error ? error.name : "Error";
 }
 
-export function useRemoteAudioController({ browserSessionRef, onSessionStateChange }: UseRemoteAudioControllerOptions) {
+export function useRemoteAudioController({
+  deviceId,
+  browserSessionRef,
+  onSessionStateChange,
+}: UseRemoteAudioControllerOptions) {
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const activeTrackRef = useRef<MediaStreamTrack | null>(null);
   const remoteAudioStreamRef = useRef<MediaStream | null>(null);
   const detachTrackListenerRef = useRef<() => void>(() => undefined);
   const playGenerationRef = useRef(0);
-  /* 音轨放在模块级 store：页面卸载后它还得留着，否则切回来音频就没了。 */
-  const remoteAudioStream = useRemoteAudioStream();
+  /* 音轨放在模块级 store（按设备分片）：页面卸载后它还得留着，否则切回来音频就没了。 */
+  const remoteAudioStream = useRemoteAudioStream(deviceId);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(1);
   const [playbackState, setPlaybackState] = useState<RemoteAudioPlaybackState>("idle");
@@ -130,10 +136,10 @@ export function useRemoteAudioController({ browserSessionRef, onSessionStateChan
     detachTrackListenerRef.current = () => undefined;
     activeTrackRef.current = null;
     clearAudioSink();
-    publishRemoteAudioStream(null);
+    publishRemoteAudioStream(deviceId, null);
     setPlaybackState("idle");
     setPlaybackErrorName("");
-  }, [clearAudioSink]);
+  }, [clearAudioSink, deviceId]);
 
   const handleRemoteAudioStream = useCallback(
     (stream: MediaStream) => {
@@ -160,11 +166,11 @@ export function useRemoteAudioController({ browserSessionRef, onSessionStateChan
 
       const nextStream = createSingleTrackMediaStream(nextTrack);
       remoteAudioStreamRef.current = nextStream;
-      publishRemoteAudioStream(nextStream);
+      publishRemoteAudioStream(deviceId, nextStream);
       setPlaybackState("waiting");
       setPlaybackErrorName("");
     },
-    [resetRemoteAudio],
+    [deviceId, resetRemoteAudio],
   );
 
   useEffect(() => {

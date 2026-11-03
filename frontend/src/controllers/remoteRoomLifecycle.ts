@@ -97,38 +97,49 @@ export function createRemoteRoomLifecycle(options: RemoteRoomLifecycleOptions) {
     return nextStatus;
   }
 
-  async function stopSignalGateway(): Promise<void> {
+  /**
+   * 断开当前页面这台设备的远控并收掉网关状态。
+   *
+   * keepGatewayAlive：多连接下还有别的设备活着时传 true。网关是客户端级、
+   * 单房间、只服务于最后 join 的那台设备——全局停掉会连坐其他连接的信令，
+   * 所以此时只清当前设备的房间，后端网关保持原样（等最后一条连接关闭再停）。
+   */
+  async function stopSignalGateway(keepGatewayAlive = false): Promise<void> {
     await options.run("signal-stop", async () => {
       options.resetBrowserRemoteSession();
-      const stopped = await stopRemoteSignalGateway();
-      let nextStatus = stopped;
+      let nextStatus: RemoteSignalGatewayStatus | null = null;
+      if (!keepGatewayAlive) nextStatus = await stopRemoteSignalGateway();
       const clearContext = options.roomJoinContext;
+      let roomCleared = false;
       if (clearContext?.deviceId) {
         try {
-          nextStatus = {
-            ...stopped,
-            roomClear:
-              clearContext.kind === "remote_assistance"
-                ? await cancelRemoteAssistance(clearContext.connectId ?? clearContext.deviceId)
-                : await clearRoomByDevice(clearContext.deviceId),
-            updatedAt: new Date().toISOString(),
-          };
+          const roomClear =
+            clearContext.kind === "remote_assistance"
+              ? await cancelRemoteAssistance(clearContext.connectId ?? clearContext.deviceId)
+              : await clearRoomByDevice(clearContext.deviceId);
+          roomCleared = roomClear.body.code === undefined || roomClear.body.code === 0;
+          if (!keepGatewayAlive && nextStatus) {
+            nextStatus = {
+              ...nextStatus,
+              roomClear,
+              updatedAt: new Date().toISOString(),
+            };
+          }
         } catch (caught) {
-          nextStatus = {
-            ...stopped,
-            roomClearError: caught instanceof Error ? caught.message : String(caught),
-            updatedAt: new Date().toISOString(),
-          };
+          if (!keepGatewayAlive && nextStatus) {
+            nextStatus = {
+              ...nextStatus,
+              roomClearError: caught instanceof Error ? caught.message : String(caught),
+              updatedAt: new Date().toISOString(),
+            };
+          }
         }
       }
       options.setSignalGatewayStatus(nextStatus);
       options.setSignalGatewayContext(null);
       options.resetSignalEvents();
       options.showToast("已断开远控连接");
-      if (
-        nextStatus.roomClear &&
-        (nextStatus.roomClear.body.code === undefined || nextStatus.roomClear.body.code === 0)
-      ) {
+      if (roomCleared) {
         /* 注意：不能把 onRoomContextPatched 写在 setRoomJoinContext 的 updater 里。
          * React 会在**渲染阶段**执行 updater，而 onRoomContextPatched 会写连接仓并
          * 通知所有订阅者（设备列表/远控页顶部的页签条），那就成了"渲染中更新别的组件"，

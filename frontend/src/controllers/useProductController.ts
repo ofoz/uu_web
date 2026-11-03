@@ -36,10 +36,11 @@ import {
   refreshConnectionHandoff,
 } from "../remote/remoteConnectionsStore.js";
 import { formatRemoteAssistanceMode } from "../remote/remoteRoomUiModel.js";
-import { setRemoteAudioStream } from "../remote/remoteAudioStreamStore.js";
-import { closeRemoteSession } from "../remote/remoteSessionStore.js";
-import { clearRemoteVideoStreams } from "../remote/remoteVideoStreamsStore.js";
-import { resetAllSignalPolling, stopSignalPolling } from "../remote/signalPolling.js";
+import { clearAllRemoteAudioStreams } from "../remote/remoteAudioStreamStore.js";
+import { closeAllRemoteSessions } from "../remote/remoteSessionStore.js";
+import { clearAllRemoteVideoStreams } from "../remote/remoteVideoStreamsStore.js";
+import { resetAllSignalPolling } from "../remote/signalPolling.js";
+import { teardownRemoteConnection } from "./teardownRemoteConnection.js";
 import { preloadRemoteControlRoute } from "../routeLoaders.js";
 import { useAccountController } from "./useAccountController.js";
 import { useAutoLoadDevices } from "./useAutoLoadDevices.js";
@@ -137,33 +138,25 @@ export function useProductController() {
       accountState.setSmsCountdown(0);
       deviceState.resetDevices();
       resetAllSignalPolling();
-      /* 会话与画面源都是模块级的，登出必须一并清掉，否则下一个账号会接手上一份连接。 */
-      closeRemoteSession();
-      clearRemoteVideoStreams();
-      setRemoteAudioStream(null);
+      /* 会话与画面源都是模块级的（按设备分片），登出必须全部清掉，
+       * 否则下一个账号会接手上一份连接。 */
+      closeAllRemoteSessions();
+      clearAllRemoteVideoStreams();
+      clearAllRemoteAudioStreams();
       for (const connection of listConnections()) closeConnection(connection.deviceId);
       navigate("/login", { replace: true });
     });
   }
 
   /**
-   * 关掉一条在途连接（页签上的 ×）。
+   * 关掉一条在途连接（设备列表页签上的 ×）。
    *
-   * 与远控页里的「断开」等价：停网关、关本地会话，再从连接仓移除。
+   * 与远控页里的「断开」等价：清这台设备自己的房间/会话/画面，最后一条
+   * 活跃连接才停客户端级网关；其他设备的连接不受影响。
    * 刻意不做二次确认——页签上的 × 已经是明确的关闭意图。
    */
   async function closeRemoteConnection(deviceId: string) {
-    await stopRemoteSignalGateway().catch(() => undefined);
-    // 轮询属于连接，连接没了就必须停，否则会一直对着已释放的会话发请求。
-    stopSignalPolling(deviceId);
-    /*
-     * 会话现在存在模块级 store 里（要活过页面），因此关连接时必须显式销毁：
-     * 只删连接仓条目的话，PeerConnection 会一直挂着，对着已释放的 UU 房间发心跳。
-     */
-    closeRemoteSession();
-    clearRemoteVideoStreams();
-    setRemoteAudioStream(null);
-    closeConnection(deviceId);
+    await teardownRemoteConnection(deviceId);
   }
 
   async function ensureMobileDevice() {

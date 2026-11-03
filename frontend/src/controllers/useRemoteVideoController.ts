@@ -26,51 +26,58 @@ function hasLivePixels(sample: BrowserRemoteVideoElementSample | undefined): boo
 }
 
 export function useRemoteVideoController({
+  deviceId,
   browserSessionRef,
   onSessionStateChange,
 }: {
+  /** 被控设备 —— 画面源在 store 里按它分片。 */
+  deviceId: string;
   browserSessionRef: RefObject<BrowserRemoteSession | null>;
   onSessionStateChange(state: BrowserRemoteSessionState): void;
 }) {
   /*
-   * 画面源放在模块级 store 里，不放在本组件 state。
+   * 画面源放在模块级 store 里（按设备分片），不放在本组件 state。
    * 页面卸载后这些 MediaStream 还得留着，否则切回来就只剩"暂无画面源"。
    */
-  const remoteVideoStreams = useRemoteVideoStreams();
+  const remoteVideoStreams = useRemoteVideoStreams(deviceId);
   const [remoteVideoSamplesById, setRemoteVideoSamplesById] = useState<RemoteVideoSamplesById>({});
   const [selectedRemoteVideoId, setSelectedRemoteVideoId] = useState("");
   const firstSeenAtByIdRef = useRef(new Map<string, number>());
   const [silenceCheckedAt, setSilenceCheckedAt] = useState(() => Date.now());
 
-  const handleRemoteMediaStream = useCallback((stream: MediaStream) => {
-    const tracks =
-      typeof stream.getVideoTracks === "function"
-        ? stream.getVideoTracks().filter((track) => track.readyState !== "ended")
-        : [];
-    const now = Date.now();
-    const firstSeenAtById = firstSeenAtByIdRef.current;
-    const nextIds = new Set(tracks.map((track, index) => track.id || `video-${index + 1}`));
-    for (const id of [...firstSeenAtById.keys()]) {
-      if (!nextIds.has(id)) firstSeenAtById.delete(id);
-    }
-    for (const id of nextIds) {
-      if (!firstSeenAtById.has(id)) firstSeenAtById.set(id, now);
-    }
-    publishRemoteVideoStreams(
-      tracks.map((track, index) => ({
-        id: track.id || `video-${index + 1}`,
-        stream: createSingleTrackMediaStream(track),
-      })),
-    );
-    setRemoteVideoSamplesById({});
-  }, []);
+  const handleRemoteMediaStream = useCallback(
+    (stream: MediaStream) => {
+      const tracks =
+        typeof stream.getVideoTracks === "function"
+          ? stream.getVideoTracks().filter((track) => track.readyState !== "ended")
+          : [];
+      const now = Date.now();
+      const firstSeenAtById = firstSeenAtByIdRef.current;
+      const nextIds = new Set(tracks.map((track, index) => track.id || `video-${index + 1}`));
+      for (const id of [...firstSeenAtById.keys()]) {
+        if (!nextIds.has(id)) firstSeenAtById.delete(id);
+      }
+      for (const id of nextIds) {
+        if (!firstSeenAtById.has(id)) firstSeenAtById.set(id, now);
+      }
+      publishRemoteVideoStreams(
+        deviceId,
+        tracks.map((track, index) => ({
+          id: track.id || `video-${index + 1}`,
+          stream: createSingleTrackMediaStream(track),
+        })),
+      );
+      setRemoteVideoSamplesById({});
+    },
+    [deviceId],
+  );
 
   const resetRemoteVideos = useCallback(() => {
     firstSeenAtByIdRef.current.clear();
-    clearRemoteVideoStreams();
+    clearRemoteVideoStreams(deviceId);
     setRemoteVideoSamplesById({});
     setSelectedRemoteVideoId("");
-  }, []);
+  }, [deviceId]);
 
   const remoteVideoSources = useMemo<RemoteVideoSourceInfo[]>(
     () =>

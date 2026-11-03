@@ -21,6 +21,10 @@ import { useRemoteAudioController } from "./useRemoteAudioController.js";
 import { stopSignalPolling } from "../remote/signalPolling.js";
 import { registerRemoteSessionHandlers } from "../remote/remoteSessionEventBridge.js";
 import { useRemoteAutoConnect } from "./useRemoteAutoConnect.js";
+import {
+  hasOtherLiveRemoteConnections,
+  teardownRemoteConnection,
+} from "./teardownRemoteConnection.js";
 import { useBusyAction } from "./useBusyAction.js";
 import { createRemoteRoomLifecycle } from "./remoteRoomLifecycle.js";
 import { useRemoteVideoController } from "./useRemoteVideoController.js";
@@ -62,7 +66,8 @@ export function useRemoteControlController(context: RemoteControlContext) {
     start: createBrowserRemoteSession,
     state: browserRemoteState,
     setState: setBrowserRemoteState,
-  } = useBrowserRemoteSessionController();
+    // 会话按被控设备分片：本页控制器只操作路由指向的这台设备。
+  } = useBrowserRemoteSessionController(routeSelectedDeviceId);
   const remoteStageFrameRef = useRef<HTMLDivElement | null>(null);
   const {
     autoReconnectEnabled,
@@ -108,10 +113,12 @@ export function useRemoteControlController(context: RemoteControlContext) {
     handleRemoteVideoSample,
     resetRemoteVideos,
   } = useRemoteVideoController({
+    deviceId: routeSelectedDeviceId,
     browserSessionRef: browserRemoteSession,
     onSessionStateChange: setBrowserRemoteState,
   });
   const { remoteAudio, handleRemoteAudioStream, resetRemoteAudio } = useRemoteAudioController({
+    deviceId: routeSelectedDeviceId,
     browserSessionRef: browserRemoteSession,
     onSessionStateChange: setBrowserRemoteState,
   });
@@ -225,22 +232,23 @@ export function useRemoteControlController(context: RemoteControlContext) {
     onSessionStateChange: setBrowserRemoteState,
   });
   /*
-   * 把本页的处理函数注册到会话事件分发器上。
+   * 把本页的处理函数注册到会话事件分发器上（按本页设备的 deviceId 分片）。
    *
    * 会话是模块级的、活过本页；页面挂载时在这里"认领"事件，卸载时注销。
    * 这样无论用户怎样在设备列表和远控页之间来回切，被控端推来的流都有人接，
    * 切回来时分发器会把页面不在场期间攒下的最后一份流补发一次 —— 画面不会再变成空白。
+   * 多连接下每台设备各有一份处理器，互不串台。
    *
    * 位置很关键：必须放在 handleRemoteClipboard / handleRemoteCursorShape 的
    * 声明之后。它们是 const，在上面取值会落进暂时性死区（TDZ），运行时报错。
    */
   useEffect(() => {
-    return registerRemoteSessionHandlers({
+    return registerRemoteSessionHandlers(routeSelectedDeviceId, {
       onRemoteStream: handleRemoteStream,
       onRemoteClipboard: handleRemoteClipboard,
       onRemoteCursorShape: handleRemoteCursorShape,
     });
-  }, [handleRemoteClipboard, handleRemoteCursorShape, handleRemoteStream]);
+  }, [handleRemoteClipboard, handleRemoteCursorShape, handleRemoteStream, routeSelectedDeviceId]);
   useEffect(() => {
     let active = true;
     void getRuntimeProfile()
@@ -291,18 +299,32 @@ export function useRemoteControlController(context: RemoteControlContext) {
     showToast,
   });
 
-  /** 从页签上关掉某条连接；如果关的是当前这台，就退回设备列表。 */
+  /**
+   * 从页签上关掉某条连接；如果关的是当前这台，就退回设备列表。
+   *
+   * 关的是**别的**设备时绝不能走 handleStopSignalGateway：那条路径清的是
+   * 当前页面的房间、网关状态和当前设备的会话，会把没被关的那台一起砸了。
+   * 改走共享 teardown，只收目标设备自己的资源。
+   */
   async function handleCloseOtherConnection(deviceId: string) {
     const isCurrent = deviceId === selectedDeviceId;
     try {
-      await handleStopSignalGateway();
+      if (isCurrent) {
+        // 还有别的连接活着时不能杀客户端级网关，只断当前这台。
+        await handleStopSignalGateway(hasOtherLiveRemoteConnections(deviceId));
+      } else {
+        await teardownRemoteConnection(deviceId);
+      }
     } catch {
       // 停网关失败不阻塞关闭：本地会话照样要关。
     } finally {
-      if (isCurrent) resetBrowserRemoteSession();
-      stopSignalPolling(deviceId);
-      closeConnection(deviceId);
-      if (isCurrent) navigate("/devices");
+      if (isCurrent) {
+        resetBrowserRemoteSession(); // handleStopSignalGateway 内部已做，兜底重复调用是幂等的。
+        stopSignalPolling(deviceId);
+        closeConnection(deviceId);
+        navigate("/devices");
+      }
+      // 关别的设备时 stopSignalPolling/closeConnection 已在 teardownRemoteConnection 里做。
     }
   }
 
@@ -322,7 +344,8 @@ export function useRemoteControlController(context: RemoteControlContext) {
   async function handleDisconnectRemote() {
     if (busy !== null) return;
     try {
-      await handleStopSignalGateway();
+      // 多连接下还有别的设备活着时不能杀客户端级网关，只断当前这台。
+      await handleStopSignalGateway(hasOtherLiveRemoteConnections(selectedDeviceId));
     } catch {
       // 停网关失败不阻塞断开：后面照样会关本地会话并移除连接。
     } finally {
@@ -357,7 +380,7 @@ export function useRemoteControlController(context: RemoteControlContext) {
      * 被控端推来的 track 无人接收，切回来时画面是空的。
      */
     const session = await createBrowserRemoteSession({
-      deviceId: authStatus.deviceId,
+      authDeviceId: authStatus.deviceId,
       forceRelay: options.forceRelay ?? (connectionRouteMode === "relay" ? true : undefined),
       gzipSdp: sdpTransportMode === "gzip",
       remoteAssistance: roomJoinContext?.kind === "remote_assistance",
