@@ -77,8 +77,13 @@ status() {
   if pid_alive; then
     echo "运行中  PID $(cat "$PID_FILE")  $URL"
     curl -s --noproxy '*' -o /dev/null -w "HTTP %{http_code}\n" "$URL" 2>/dev/null || true
+  elif port_busy; then
+    # 端口在听、但没有（或丢了）PID 文件：多半是服务由别的方式拉起，
+    # 或者跑在另一个 PID 命名空间里（容器/沙箱）。PID 文件测不到不代表没在跑。
+    echo "运行中（PID 文件缺失或该 PID 已不可见，端口 $PORT 有响应）  $URL"
+    curl -s --noproxy '*' -o /dev/null -w "HTTP %{http_code}\n" "$URL" 2>/dev/null || true
   else
-    echo "未运行（端口 $PORT $([ -n "$(port_busy && echo busy)" ] && echo 已占用 || echo 空闲)）"
+    echo "未运行（端口 $PORT 空闲）"
   fi
 }
 
@@ -195,6 +200,10 @@ case "${1:-start}" in
   restart) stop; sleep 1; start ;;
   status)  status ;;
   app)     app ;;
+  # 再开一个独立窗口（同一个共享 profile，多开时 Chromium 会把它当成进程内的新窗口）：
+  # 每个窗口有各自的 sessionStorage → 各自的 remoteSessionId → 后端各跑一套
+  # RemoteControlService，可以同时控多台设备。
+  new)     app ;;
   open)    start >/dev/null; xdg-open "$URL" >/dev/null 2>&1 & ;;
-  *)       echo "用法: $0 {start|stop|restart|status|app|open}" ;;
+  *)       echo "用法: $0 {start|stop|restart|status|app|new|open}" ;;
 esac

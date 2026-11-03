@@ -225,10 +225,24 @@
   flex: 0 0 auto;
   display: inline-flex;
   color: var(--gray-400);
+  /* 同一个类也给 <button> 用过（新开窗口），把浏览器默认样式抹平。 */
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
 }
 
 .app-sidebar-repo-link:hover {
   color: var(--text);
+}
+
+/* 新开窗口按钮复用了图标按钮的类，但要压掉全局 button 的 36px 高与边框。 */
+button.app-sidebar-repo-link {
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  border-radius: 6px;
+  background: none;
 }
 
 .app-shell-content {

@@ -18,21 +18,31 @@ app.setName("uurc-web");
 
 let mainWindow = null;
 
-// 只允许一个窗口；重复点击图标时把已有窗口提到前面。
+// 多窗口：每个窗口是独立的 BrowserWindow（独立 webContents），sessionStorage
+// 天然隔离，前端各拿一个 remoteSessionId，后端对应各自的 RemoteControlService，
+// 因此可以同时控多台设备。主窗口编号 0，其它窗口在主窗口关闭时一起收掉。
+const windows = new Set();
+const MAX_WINDOWS = 4;
+
+// 只允许一个进程实例；重复点击图标时把已有窗口提到前面。
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   app.on("second-instance", () => {
-    if (!mainWindow) return;
-    if (mainWindow.isMinimized()) mainWindow.restore();
-    mainWindow.focus();
+    const focusTarget = [...windows].find((win) => !win.isDestroyed()) ?? null;
+    if (!focusTarget) return;
+    if (focusTarget.isMinimized()) focusTarget.restore();
+    focusTarget.focus();
   });
 }
 
 function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 820,
+  if (windows.size >= MAX_WINDOWS) return null;
+
+  const win = new BrowserWindow({
+    // 首窗最大化；后续窗口错开一点，避免完全叠在一起看不出开了几个。
+    width: windows.size === 0 ? 1280 : 1160,
+    height: windows.size === 0 ? 820 : 760,
     minWidth: 960,
     minHeight: 600,
     show: false,
@@ -50,51 +60,81 @@ function createWindow() {
     },
   });
 
-  mainWindow.once("ready-to-show", () => {
+  windows.add(win);
+  const isFirst = windows.size === 1;
+  if (isFirst) mainWindow = win;
+
+  win.once("ready-to-show", () => {
     // maximize 而不是 fullscreen：满工作区、dock 仍在，正是用户要的形态。
-    mainWindow.maximize();
-    mainWindow.show();
+    // 只有首窗最大化，后续窗口保留普通尺寸，方便并排看两台机器。
+    if (isFirst) win.maximize();
+    win.show();
   });
 
-  mainWindow.on("closed", () => {
-    mainWindow = null;
+  win.on("closed", () => {
+    windows.delete(win);
+    if (win === mainWindow) {
+      mainWindow = null;
+      // 主窗一关就整体退出，不留一堆看不出归属的孤儿窗口。
+      for (const other of windows) {
+        if (!other.isDestroyed()) other.close();
+      }
+    }
   });
 
-  // 双击拖拽区、系统快捷键、窗口边缘拖拽都会改变最大化状态，
-  // 主动推给页面，窗口按钮的图标才能跟得上。
-  const pushWindowState = () => {
-    mainWindow?.webContents.send("uurc:window-state-changed", {
-      maximized: mainWindow?.isMaximized() ?? false,
-    });
-  };
-  mainWindow.on("maximize", pushWindowState);
-  mainWindow.on("unmaximize", pushWindowState);
+  // Ctrl/⌘+N 再开一个窗口。
+  win.webContents.on("before-input-event", (event, input) => {
+    if (input.type !== "keyDown") return;
+    const key = String(input.key || "").toLowerCase();
+    const mod = process.platform === "darwin" ? input.meta : input.control;
+    if (mod && key === "n") {
+      event.preventDefault();
+      createWindow();
+    }
+  });
 
-  // 站内跳 GitHub 之类的链接交给系统浏览器，壳里不新开窗口。
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+  // 窗口状态推送要精确发到发起操作的那个窗口，不能用全局 mainWindow。
+  win.on("maximize", () => pushWindowState(win));
+  win.on("unmaximize", () => pushWindowState(win));
+
+  // 站内跳 GitHub 之类的链接交给系统浏览器，壳里不新开渲染进程。
+  win.webContents.setWindowOpenHandler(({ url }) => {
     void shell.openExternal(url);
     return { action: "deny" };
   });
 
-  void mainWindow.loadURL(APP_URL);
+  void win.loadURL(APP_URL);
+  return win;
 }
 
-ipcMain.on("uurc:window-minimize", () => {
-  mainWindow?.minimize();
+function pushWindowState(win) {
+  if (!win || win.isDestroyed()) return;
+  win.webContents.send("uurc:window-state-changed", { maximized: win.isMaximized() });
+}
+
+/** 把 IPC 事件路由回它所属的窗口，避免多窗口时按钮操作串到别的窗口上。 */
+function senderWindow(event) {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  return win && !win.isDestroyed() ? win : null;
+}
+
+ipcMain.on("uurc:window-minimize", (event) => {
+  senderWindow(event)?.minimize();
 });
 
-ipcMain.on("uurc:window-toggle-maximize", () => {
-  if (!mainWindow) return;
-  if (mainWindow.isMaximized()) mainWindow.unmaximize();
-  else mainWindow.maximize();
+ipcMain.on("uurc:window-toggle-maximize", (event) => {
+  const win = senderWindow(event);
+  if (!win) return;
+  if (win.isMaximized()) win.unmaximize();
+  else win.maximize();
 });
 
-ipcMain.on("uurc:window-close", () => {
-  mainWindow?.close();
+ipcMain.on("uurc:window-close", (event) => {
+  senderWindow(event)?.close();
 });
 
-ipcMain.handle("uurc:window-state", () => ({
-  maximized: mainWindow?.isMaximized() ?? false,
+ipcMain.handle("uurc:window-state", (event) => ({
+  maximized: senderWindow(event)?.isMaximized() ?? false,
 }));
 
 void app.whenReady().then(() => {

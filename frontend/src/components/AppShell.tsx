@@ -6,6 +6,7 @@ import { Link, NavLink, useLocation, useOutlet } from "react-router";
 import type { UuDeviceGroups } from "@uurc/shared/devices";
 
 import { useCommandPaletteController } from "../controllers/useCommandPaletteController.js";
+import { DesktopNewWindowButton } from "../desktop/DesktopNewWindowButton.js";
 import { tabIndicatorTransition } from "../motion/presets.js";
 import { CommandPalette } from "./CommandPalette.js";
 
@@ -103,6 +104,7 @@ export function AppShell({
             <div className="app-sidebar-identity-label">主控端</div>
             <div className="app-sidebar-identity-id">{identityDeviceLabel}</div>
           </div>
+          <DesktopNewWindowButton className="app-sidebar-repo-link" />
           <a
             className="app-sidebar-repo-link"
             href="https://github.com/ofoz/uu_web"
