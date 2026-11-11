@@ -1,0 +1,33 @@
+appId: com.ofoz.uurcweb
+productName: UU Remote
+executableName: uu-remote
+copyright: Copyright © 2026 ofoz
+directories:
+  app: desktop/dist/app
+  output: desktop/dist/release
+  buildResources: desktop/dist/build
+files:
+  - desktop/**
+  - backend-server.mjs
+  - frontend/dist/**
+  - package.json
+  - "!node_modules/**"
+asar: false
+npmRebuild: false
+linux:
+  target:
+    - deb
+  icon: desktop/dist/build/icon.png
+  category: Network;RemoteAccess
+  syncDesktopName: true
+  maintainer: ofoz <ofoz@users.noreply.github.com>
+  synopsis: UU 远程桌面主控端
+  description: 自托管的 UU 远程桌面 Web 主控端，打包为带独立窗口的桌面程序。
+  desktop:
+    entry:
+      Name: UU 远程
+      Name[en]: UU Remote
+      StartupWMClass: uurc-web
+      StartupNotify: "true"
+deb:
+  compression: xz

@@ -1,4 +1,4 @@
-// 只暴露窗口控制这一件事，业务能力一律不给。
+// 通过 contextBridge 只暴露窗口控制、任务栏标题与本地登录态持久化，其余业务能力一律不给。
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("uurcDesktop", {
@@ -16,6 +16,10 @@ contextBridge.exposeInMainWorld("uurcDesktop", {
    * frameless 窗口不显示标题栏，这里只影响任务栏/Alt-Tab 的显示。
    */
   setWindowTitle: (title) => ipcRenderer.send("uurc:window-title", String(title ?? "")),
+  // 同步读写主进程落盘的登录态，防止关窗/重启或端口变动导致 localStorage 丢失后重新登录。
+  loadLoginState: () => ipcRenderer.sendSync("uurc:login-state-load"),
+  saveLoginState: (state) => ipcRenderer.sendSync("uurc:login-state-save", state),
+  clearLoginState: () => ipcRenderer.sendSync("uurc:login-state-clear"),
   // 返回取消订阅函数，组件卸载时解绑，避免热重载后重复注册。
   onWindowStateChange: (handler) => {
     const listener = (_event, state) => handler(state);

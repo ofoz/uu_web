@@ -15,7 +15,7 @@ import { RemoteControlWarnings, type RemoteControlWarningsProps } from "./Remote
 import { RemoteOccupiedDialog } from "./RemoteOccupiedDialog.js";
 import { RemoteReconnectBanner, type RemoteReconnectBannerProps } from "./RemoteReconnectBanner.js";
 import type { RemoteVideoSourcePanelProps } from "./RemoteVideoSourcePanel.js";
-import { useFullscreenChromeAutoHide } from "./useFullscreenChromeAutoHide.js";
+import { FULLSCREEN_REVEAL_DELAY_MS, useFullscreenChromeAutoHide } from "./useFullscreenChromeAutoHide.js";
 
 export interface RemoteControlPageProps {
   shell: {
@@ -52,12 +52,14 @@ export function RemoteControlPage(props: RemoteControlPageProps) {
 
   // 顶栏、状态徽标、工具栏统一走自动隐藏。
   // 连接成功后画面就是主角：即使没进全屏也先隐身，鼠标触顶或靠近它们再唤出；
-  // 未连接时保持常驻，否则用户找不到「开始连接」这类入口。
+  // 全屏下顶部浮层覆盖在被控端上方，需在顶部停留 5 秒不动再弹出，免得操作目标机顶部区域时误触。
   const chromeAnchorRef = useRef<HTMLElement | null>(null);
   const topbarRef = useRef<HTMLElement | null>(null);
   const chromeAnchors = useMemo(() => [topbarRef, chromeAnchorRef], []);
   const immersive = shell.isFullscreen || props.stage.browserRemoteState.stage === "connected";
-  const chrome = useFullscreenChromeAutoHide(immersive, chromeAnchors);
+  const chrome = useFullscreenChromeAutoHide(immersive, chromeAnchors, {
+    revealDelayMs: shell.isFullscreen ? FULLSCREEN_REVEAL_DELAY_MS : 0,
+  });
 
   const { occupiedBySelfClient, selectedDeviceOccupied } = props.warnings;
   // 若用户已在“设置”里显式选择了“接管控制”，无需再弹一次确认对话框。
@@ -168,7 +170,7 @@ export function RemoteControlPage(props: RemoteControlPageProps) {
           <RemoteReconnectBanner {...props.reconnect} />
           {shell.isFullscreen ? (
             <div className={`fullscreen-hint${chrome.hidden ? " fullscreen-hint--idle-hidden" : ""}`}>
-              鼠标移到屏幕顶部可唤出顶栏与工具栏
+              鼠标移到屏幕顶部停留 5 秒可唤出顶栏与工具栏
             </div>
           ) : null}
         </div>

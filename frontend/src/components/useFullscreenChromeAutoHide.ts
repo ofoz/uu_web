@@ -1,12 +1,23 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 
+export const FULLSCREEN_REVEAL_DELAY_MS = 5000;
+
 const IDLE_HIDE_DELAY_MS = 2200;
-const TOP_REVEAL_ZONE_PX = 72;
+const TOP_REVEAL_ZONE_PX = 56;
 const ANCHOR_REVEAL_PADDING_PX = 56;
+const POST_REVEAL_HOVER_CHECK_MS = 220;
 
 export interface FullscreenChromeHoverBindings {
   onPointerEnter: () => void;
   onPointerLeave: () => void;
+}
+
+export interface FullscreenChromeAutoHideOptions {
+  /**
+   * 隐藏态下鼠标进入唤出热区后，需保持静止不动的停留时长（毫秒）。
+   * 0 表示移入即刻唤出；全屏模式下传 FULLSCREEN_REVEAL_DELAY_MS（5000ms），避免误触发挡住目标机顶部区域。
+   */
+  revealDelayMs?: number;
 }
 
 export interface FullscreenChromeAutoHide {
@@ -58,11 +69,10 @@ function collectAnchors(refs: readonly RefObject<HTMLElement | null>[]): HTMLEle
  * 沉浸模式下的悬浮层自动隐藏（全屏，或已连接远控画面）。
  *
  * 远控过程中鼠标一直在动，所以不能"一动就显示"——那样工具栏会永远挂在画面上。
- * 这里改为：切入沉浸态先显示 2.2 秒并自动淡出；之后只有鼠标触到屏幕顶边，
- * 或移到顶栏 / 工具栏原本所在的位置附近，才会重新唤出。
- *
- * 隐藏态只做 opacity，不做位移，锚点矩形仍在原位，
- * 否则"移回原位置唤出"就永远不可能命中。
+ * 切入沉浸态先显示 2.2 秒并自动淡出；之后：
+ * - 非全屏已连接态（revealDelayMs = 0）：鼠标触顶或从远处靠近顶栏即刻唤出工具栏。
+ * - 全屏态（revealDelayMs = 5000）：鼠标移到顶部唤出区域后，必须连续 5 秒不动且无交互才弹出顶栏，
+ *   防止路过或点击被控端浏览器标签页 / 窗口标题栏时误触发遮挡。
  *
  * anchors 传入所有需要"鼠标压住就别淡出"的悬浮层（顶栏、工具栏），
  * 鼠标落在其中任一区域时保持可见。
@@ -70,11 +80,18 @@ function collectAnchors(refs: readonly RefObject<HTMLElement | null>[]): HTMLEle
 export function useFullscreenChromeAutoHide(
   enabled: boolean,
   anchorRefs: readonly RefObject<HTMLElement | null>[],
+  options: FullscreenChromeAutoHideOptions = {},
 ): FullscreenChromeAutoHide {
+  const revealDelayMs = options.revealDelayMs ?? 0;
   const [hidden, setHidden] = useState(false);
+  const hiddenRef = useRef(false);
+  const revealDelayMsRef = useRef(revealDelayMs);
   const hoveringRef = useRef(false);
   const holdingRef = useRef(false);
-  const timerRef = useRef<number | null>(null);
+  const hideTimerRef = useRef<number | null>(null);
+  const revealTimerRef = useRef<number | null>(null);
+  const postRevealTimerRef = useRef<number | null>(null);
+  const lastPointerRef = useRef<{ clientX: number; clientY: number } | null>(null);
   // 靠近唤出用边缘触发：鼠标必须先从远处移进来才唤一次，
   // 否则在画面底部（被控端任务栏就在那儿）来回操作会一直把工具栏顶出来。
   const nearArmedRef = useRef(true);
@@ -82,61 +99,161 @@ export function useFullscreenChromeAutoHide(
   const anchorRefsRef = useRef(anchorRefs);
   anchorRefsRef.current = anchorRefs;
 
-  const clearTimer = useCallback(() => {
-    if (timerRef.current === null) return;
-    window.clearTimeout(timerRef.current);
-    timerRef.current = null;
+  const setHiddenState = useCallback((next: boolean) => {
+    hiddenRef.current = next;
+    setHidden(next);
+  }, []);
+
+  const clearHideTimer = useCallback(() => {
+    if (hideTimerRef.current === null) return;
+    window.clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = null;
+  }, []);
+
+  const clearRevealTimer = useCallback(() => {
+    if (revealTimerRef.current === null) return;
+    window.clearTimeout(revealTimerRef.current);
+    revealTimerRef.current = null;
+  }, []);
+
+  const clearPostRevealTimer = useCallback(() => {
+    if (postRevealTimerRef.current === null) return;
+    window.clearTimeout(postRevealTimerRef.current);
+    postRevealTimerRef.current = null;
   }, []);
 
   const scheduleHide = useCallback(() => {
-    clearTimer();
+    clearHideTimer();
     if (hoveringRef.current || holdingRef.current) return;
-    timerRef.current = window.setTimeout(() => {
-      timerRef.current = null;
+    hideTimerRef.current = window.setTimeout(() => {
+      hideTimerRef.current = null;
       if (hoveringRef.current || holdingRef.current) return;
-      setHidden(true);
+      clearPostRevealTimer();
+      setHiddenState(true);
     }, IDLE_HIDE_DELAY_MS);
-  }, [clearTimer]);
+  }, [clearHideTimer, clearPostRevealTimer, setHiddenState]);
 
   const reveal = useCallback(() => {
-    setHidden(false);
+    clearRevealTimer();
+    clearPostRevealTimer();
+    setHiddenState(false);
     scheduleHide();
-  }, [scheduleHide]);
+  }, [clearPostRevealTimer, clearRevealTimer, scheduleHide, setHiddenState]);
+
+  const scheduleDelayedReveal = useCallback(
+    (delayMs: number) => {
+      clearRevealTimer();
+      clearPostRevealTimer();
+      revealTimerRef.current = window.setTimeout(() => {
+        revealTimerRef.current = null;
+        if (!hiddenRef.current) return;
+        nearArmedRef.current = false;
+        reveal();
+        // 顶栏用 0.18s CSS transition 从屏幕上方滑入，等过渡完成后若静止光标正好落在顶栏内，
+        // 锁定 hovering 状态，避免等待 5 秒唤出后 2.2 秒又在光标下自动缩回。
+        postRevealTimerRef.current = window.setTimeout(() => {
+          postRevealTimerRef.current = null;
+          const lastPointer = lastPointerRef.current;
+          if (!lastPointer || hiddenRef.current) return;
+          const anchors = collectAnchors(anchorRefsRef.current);
+          if (isInsideAnyAnchor(anchors, lastPointer.clientX, lastPointer.clientY)) {
+            hoveringRef.current = true;
+            clearHideTimer();
+          }
+        }, POST_REVEAL_HOVER_CHECK_MS);
+      }, delayMs);
+    },
+    [clearHideTimer, clearPostRevealTimer, clearRevealTimer, reveal],
+  );
+
+  useEffect(() => {
+    revealDelayMsRef.current = revealDelayMs;
+    if (revealDelayMs <= 0) {
+      clearRevealTimer();
+      clearPostRevealTimer();
+    }
+  }, [clearPostRevealTimer, clearRevealTimer, revealDelayMs]);
 
   useEffect(() => {
     if (!enabled) {
-      clearTimer();
+      clearHideTimer();
+      clearRevealTimer();
+      clearPostRevealTimer();
       nearArmedRef.current = true;
-      setHidden(false);
+      hoveringRef.current = false;
+      lastPointerRef.current = null;
+      setHiddenState(false);
       return;
     }
 
     reveal();
 
     function handlePointerMove(event: globalThis.PointerEvent) {
+      const { clientX, clientY } = event;
+      const previousPointer = lastPointerRef.current;
+      const pointerMoved =
+        previousPointer === null || previousPointer.clientX !== clientX || previousPointer.clientY !== clientY;
+      lastPointerRef.current = { clientX, clientY };
+
       const anchors = collectAnchors(anchorRefsRef.current);
-      // 鼠标正压在悬浮层上：常见于悬浮层"在光标下方淡入"，此时不能计时隐藏。
-      if (isInsideAnyAnchor(anchors, event.clientX, event.clientY)) {
+      const insideAnchor = isInsideAnyAnchor(anchors, clientX, clientY);
+      const delayMs = revealDelayMsRef.current;
+
+      // 全屏隐藏态下启用停留延迟：进入热区开始 5 秒倒计时；坐标不变的重复事件不打断计时，
+      // 坐标变化则重新计满 5 秒，离开热区立即取消。
+      if (hiddenRef.current && delayMs > 0) {
+        const inRevealZone =
+          clientY <= TOP_REVEAL_ZONE_PX ||
+          insideAnchor ||
+          (nearArmedRef.current && isNearAnyAnchor(anchors, clientX, clientY));
+
+        if (!inRevealZone) {
+          nearArmedRef.current = true;
+          clearRevealTimer();
+          return;
+        }
+
+        if (!pointerMoved && revealTimerRef.current !== null) {
+          return;
+        }
+
+        scheduleDelayedReveal(delayMs);
+        return;
+      }
+
+      // 悬浮层已可见，或未启用停留延迟（delayMs = 0）：
+      // 鼠标压在悬浮层上时保持可见，不计时隐藏。
+      if (insideAnchor) {
         hoveringRef.current = true;
         nearArmedRef.current = false;
-        setHidden(false);
-        clearTimer();
+        clearRevealTimer();
+        setHiddenState(false);
+        clearHideTimer();
         return;
       }
-      // 触顶永远唤出：这是最明确、也最不会误触的手势。
-      if (event.clientY <= TOP_REVEAL_ZONE_PX) {
-        nearArmedRef.current = true;
-        reveal();
-        return;
-      }
-      // 靠近悬浮层原位：只在"从远处移进来"的那一下唤出，停在附近继续操作不再反复唤起。
-      if (isNearAnyAnchor(anchors, event.clientX, event.clientY)) {
-        if (nearArmedRef.current) {
-          nearArmedRef.current = false;
+
+      if (clientY <= TOP_REVEAL_ZONE_PX) {
+        if (delayMs <= 0) {
+          nearArmedRef.current = true;
           reveal();
+        } else if (hoveringRef.current) {
+          hoveringRef.current = false;
+          scheduleHide();
         }
         return;
       }
+
+      if (isNearAnyAnchor(anchors, clientX, clientY)) {
+        if (delayMs <= 0 && nearArmedRef.current) {
+          nearArmedRef.current = false;
+          reveal();
+        } else if (hoveringRef.current) {
+          hoveringRef.current = false;
+          scheduleHide();
+        }
+        return;
+      }
+
       nearArmedRef.current = true;
       if (hoveringRef.current) {
         hoveringRef.current = false;
@@ -144,31 +261,71 @@ export function useFullscreenChromeAutoHide(
       }
     }
 
+    function handleActiveInteraction() {
+      if (!hiddenRef.current || revealDelayMsRef.current <= 0) return;
+      if (revealTimerRef.current === null) return;
+      scheduleDelayedReveal(revealDelayMsRef.current);
+    }
+
+    function handleViewportExit() {
+      clearRevealTimer();
+      clearPostRevealTimer();
+      lastPointerRef.current = null;
+      if (hoveringRef.current) {
+        hoveringRef.current = false;
+        scheduleHide();
+      }
+    }
+
     window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    window.addEventListener("pointerdown", handleActiveInteraction, { passive: true });
+    window.addEventListener("wheel", handleActiveInteraction, { passive: true });
+    window.addEventListener("keydown", handleActiveInteraction, { passive: true });
+    window.addEventListener("blur", handleViewportExit);
+    document.addEventListener("mouseleave", handleViewportExit);
     return () => {
       window.removeEventListener("pointermove", handlePointerMove);
-      clearTimer();
+      window.removeEventListener("pointerdown", handleActiveInteraction);
+      window.removeEventListener("wheel", handleActiveInteraction);
+      window.removeEventListener("keydown", handleActiveInteraction);
+      window.removeEventListener("blur", handleViewportExit);
+      document.removeEventListener("mouseleave", handleViewportExit);
+      clearHideTimer();
+      clearRevealTimer();
+      clearPostRevealTimer();
     };
-  }, [clearTimer, enabled, reveal, scheduleHide]);
+  }, [
+    clearHideTimer,
+    clearPostRevealTimer,
+    clearRevealTimer,
+    enabled,
+    reveal,
+    scheduleDelayedReveal,
+    scheduleHide,
+    setHiddenState,
+  ]);
 
   const setHolding = useCallback(
     (holding: boolean) => {
       holdingRef.current = holding;
-      if (holding) clearTimer();
+      if (holding) clearHideTimer();
       else scheduleHide();
     },
-    [clearTimer, scheduleHide],
+    [clearHideTimer, scheduleHide],
   );
 
   const hoverBindings: FullscreenChromeHoverBindings = {
     onPointerEnter: () => {
+      if (hiddenRef.current) return;
       hoveringRef.current = true;
-      clearTimer();
+      clearHideTimer();
     },
     onPointerLeave: () => {
       hoveringRef.current = false;
       nearArmedRef.current = true;
-      scheduleHide();
+      if (!hiddenRef.current) {
+        scheduleHide();
+      }
     },
   };
 
